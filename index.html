@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>데블스 게임룸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 탈락자들이 돌아온 밤의 게임동, 긴장되고 묵직하게
+   IDEA: 하루 일정표처럼 놓인 게임동의 문들 — 메인 매치, 감옥 매치, 히든 스테이지
+   PICTURE: 붉은 조명 아래 도는 "DEAD AGAIN" 고리와 피스, 그 아래 문 카드들
+   COLOUR/TYPE: 먹색·핏빛 크림슨·뼈색, 금색은 피스와 기록에만 / Black Han Sans + Noto Sans KR, 메모는 Nanum Pen Script
+   LAYOUT: 꽉 찬 히어로 → DAY별 문 행 → 게임 화면은 상단 바 + 본문 */
+:root{color-scheme:light dark;--bg:light-dark(#ece7e0,#0e0b0c);--ink:light-dark(#1b1214,#efe6dc);--mut:light-dark(#6a5d5a,#a0928c);--pan:light-dark(#faf6f0,#1a1315);--pan2:light-dark(#f1ebe3,#22191b);--line:light-dark(#d8ccbf,#3a2a2e);--blood:light-dark(#a3172c,#e0384f);--gold:light-dark(#8a5d0b,#e8c262);--up:light-dark(#c4162f,#ff5a6e);--dn:light-dark(#1f5fbf,#5aa2ff);--R:#c8213a;--G:#2f8a5b;--B:#2f6fb0}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Noto Sans KR',system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:'Black Han Sans',sans-serif;font-weight:400;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-size:clamp(26px,4vw,38px);margin-bottom:6px}
+button{font:inherit;font-weight:700;min-height:44px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--pan);color:var(--ink);cursor:pointer}
+button.go{background:var(--blood);color:#fff;border-color:transparent}
+button:disabled{opacity:.35;cursor:not-allowed}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.sel{outline:3px solid var(--gold);outline-offset:2px}
+input[type=text],input[type=number]{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+.card{background:var(--pan);border:1px solid var(--line);border-radius:16px;padding:clamp(16px,3vw,26px)}
+.k{color:var(--blood);font-weight:700;font-size:14px;margin:0}
+.mut{color:var(--mut)}
+.rule{border-left:4px solid var(--blood);padding:10px 14px;background:color-mix(in srgb,var(--blood) 7%,transparent);border-radius:0 10px 10px 0;margin:12px 0;max-width:78ch}
+.rule ol,.rule ul{margin:6px 0;padding-left:20px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.lose td{color:var(--blood);font-weight:700}tr.me td{background:color-mix(in srgb,var(--gold) 13%,transparent)}
+.warn{color:var(--blood);font-weight:700}.ok{color:var(--G);font-weight:700}
+.dot{width:18px;height:18px;border-radius:50%;display:inline-block;border:2px solid #fff6;vertical-align:-3px}
+.dot.R{background:var(--R)}.dot.G{background:var(--G)}.dot.B{background:var(--B)}.dot.W{background:conic-gradient(var(--R),#e8c262,var(--G),var(--B),#7b5cc4,var(--R))}.dot.H{background:var(--line)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+.stackg{display:grid;gap:18px}
+.pop{animation:pop .5s}@keyframes pop{0%{transform:scale(.97);opacity:.4}100%{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.pop,.burst,.spin{animation:none!important}}
+
+/* ---------- 허브 ---------- */
+.hero{position:relative;overflow:hidden;color:#f3e9de;background:radial-gradient(70% 90% at 50% 38%,#7a0f1f 0%,#3a050d 45%,#0b0708 80%);padding:clamp(40px,7vw,90px) max(5vw,16px) clamp(36px,5vw,64px);text-align:center;min-height:min(78vh,640px);display:grid;place-items:center}
+.hero svg.ringart{position:absolute;left:50%;top:46%;width:min(118vw,760px);transform:translate(-50%,-50%);opacity:.95;pointer-events:none}
+.spin{animation:spin 60s linear infinite;transform-origin:300px 300px}@keyframes spin{to{transform:rotate(360deg)}}
+.hero .in{position:relative;max-width:760px}
+.eyebrow{font-size:14px;letter-spacing:.5px;opacity:.85}
+.hero h1{font-size:clamp(46px,10vw,104px);line-height:.95;margin:12px 0 10px;text-shadow:0 6px 30px #000a}
+.hero h1 span{color:#ff4a60}
+.hero p{font-size:clamp(16px,2.2vw,19px);max-width:52ch;margin:0 auto 22px;opacity:.92}
+.hero .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.hero .cta a{display:inline-flex;align-items:center;min-height:48px;padding:12px 22px;border-radius:12px;font-weight:700;text-decoration:none}
+.hero .cta a.p{background:#e0384f;color:#fff}.hero .cta a.s{border:1px solid #fff5;color:#fff}
+.stats{display:flex;gap:clamp(16px,4vw,48px);justify-content:center;margin-top:30px;flex-wrap:wrap}
+.stats div{min-width:90px}.stats b{display:block;font:400 clamp(28px,4vw,40px) 'Black Han Sans';color:#e8c262}.stats span{font-size:13px;opacity:.8}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px);max-width:1240px;margin:auto}
+.dayh{display:flex;align-items:baseline;gap:14px;margin:28px 0 12px;border-bottom:2px solid var(--line);padding-bottom:8px}
+.dayh h2{margin:0}.dayh span{color:var(--mut);font-size:15px}
+.doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.door{position:relative;display:flex;flex-direction:column;gap:10px;padding:22px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(170deg,var(--pan),var(--pan2));overflow:hidden;min-height:260px}
+.door::before{content:'';position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c,var(--blood)) 35%,transparent),transparent 70%)}
+.door .tp{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+.badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--c,var(--blood)) 18%,transparent);color:var(--c,var(--blood));white-space:nowrap}
+.badge.new{background:#e8c262;color:#1b1214}
+.door h3{font-size:clamp(28px,3.4vw,36px);position:relative}
+.door p{margin:0;color:var(--mut);font-size:15px;position:relative}
+.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+.door .best{font-size:14px;color:var(--gold);font-weight:700;min-height:22px}
+.door button{margin-top:auto;align-self:flex-start;background:var(--ink);color:var(--bg);border-color:transparent}
+.door:hover{border-color:var(--c,var(--blood))}
+.foot{color:var(--mut);font-size:13px;text-align:center;padding:24px 16px 40px}
+
+/* ---------- 게임 화면 공통 ---------- */
+.gbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:10px max(3vw,12px);background:#140c0e;color:#f3e9de;border-bottom:3px solid #e0384f;flex-wrap:wrap}
+.gbar button{background:transparent;color:#f3e9de;border-color:#ffffff30;min-height:40px;padding:6px 14px}
+.gbar h1{font-size:clamp(22px,3vw,30px)}
+.gbar #gst{margin-left:auto;font-size:14px;font-weight:700;background:#ffffff18;padding:5px 12px;border-radius:99px}
+#groot{max-width:1240px;margin:auto;padding:20px max(3vw,12px) 56px;display:grid;gap:18px}
+
+/* ---------- 무거운 13 ---------- */
+.ring{position:relative;width:min(100%,440px);aspect-ratio:1;margin:6px auto}
+.ring::before{content:'';position:absolute;inset:16%;border-radius:50%;background:radial-gradient(circle at 40% 35%,light-dark(#e6ded3,#2e2226),light-dark(#cfc5b8,#1c1416));box-shadow:inset 0 -10px 30px #0003,0 8px 20px #0002}
+.mid{position:absolute;inset:26%;display:grid;place-items:center;text-align:center;font-size:14px}
+.mid b{display:block;font:400 clamp(24px,5vw,34px) 'Black Han Sans'}
+.seat{position:absolute;transform:translate(-50%,-50%);width:88px;text-align:center;font-size:13px;line-height:1.25}
+.seat .av{width:40px;height:40px;margin:0 auto 2px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;border:3px solid transparent;position:relative}
+.seat.cur .av{border-color:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 35%,transparent)}
+.seat.me .nm{color:var(--gold);font-weight:700}
+.seat .pen{color:var(--blood);font-weight:700}
+.star{position:absolute;top:-8px;right:-10px;background:var(--gold);color:#000;font-size:10px;font-weight:700;border-radius:99px;padding:1px 5px}
+.sub{display:inline-flex;gap:3px;align-items:center;margin-top:2px;min-height:22px}
+.cv{display:inline-grid;place-items:center;width:20px;height:22px;border-radius:4px;background:#4a4038;color:#fff;font-weight:700;font-size:12px}
+.empty{width:64px;height:64px;border-radius:50%;border:2px dashed var(--line);background:var(--pan);font-size:13px;padding:0}
+.stands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stand{border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg);border-top:6px solid var(--c)}
+.stand.R{--c:var(--R)}.stand.G{--c:var(--G)}.stand.B{--c:var(--B)}
+.stand h3{font-size:16px;color:var(--c)}
+.sum{font:400 clamp(30px,5vw,40px) 'Black Han Sans';line-height:1}.sum small{font-size:15px;color:var(--mut)}
+.gauge{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0}
+.gauge i{display:block;height:100%;background:var(--c)}.gauge.hot i{background:var(--blood)}
+.pile{display:flex;flex-wrap:wrap-reverse;gap:4px;min-height:64px;align-content:flex-start}
+.rock{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 60%,#fff),var(--c));box-shadow:inset 0 -3px #0003}
+.rock.new{outline:2px solid var(--gold)}
+.burst{animation:sh .6s}@keyframes sh{0%,100%{transform:none}25%{transform:translateX(-5px) rotate(-1deg)}75%{transform:translateX(5px) rotate(1deg)}}
+.hand{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.cb{width:52px;height:72px;padding:0;font:400 28px 'Black Han Sans';background:linear-gradient(170deg,#7a6a5c,#3d332b);color:#fff;border:none}
+.chipb{width:56px;height:56px;border-radius:50%;padding:0;border:3px solid #fff5;color:#fff;font-size:13px;position:relative}
+.chipb.R{background:var(--R)}.chipb.G{background:var(--G)}.chipb.B{background:var(--B)}.chipb.W{background:conic-gradient(var(--R),#e8c262,var(--G),var(--B),#7b5cc4,var(--R))}
+.chipb em{position:absolute;bottom:-6px;right:-6px;background:var(--ink);color:var(--bg);font-style:normal;font-size:11px;border-radius:99px;padding:1px 6px}
+.colbtn{border-top:5px solid var(--c);text-align:left;line-height:1.3}.colbtn.R{--c:var(--R)}.colbtn.G{--c:var(--G)}.colbtn.B{--c:var(--B)}
+.colbtn small{display:block;font-weight:400;font-size:13px}
+.log{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:14px;max-height:300px;overflow:auto}
+.log li{padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.log li.b{background:color-mix(in srgb,var(--blood) 18%,transparent);font-weight:700}
+.log li.p{background:color-mix(in srgb,var(--gold) 15%,transparent)}
+.ord{display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:8px 0;list-style:none;font-size:13px}
+.ord li{padding:4px 8px;border-radius:8px;border:1px solid var(--line)}
+.ord li.done{opacity:.4}.ord li.now{border-color:var(--gold);font-weight:700}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+label.tg{display:flex;gap:8px;align-items:center;min-height:44px;cursor:pointer}
+label.tg input{width:20px;height:20px}
+
+/* ---------- 미스터리 거래소 ---------- */
+.xtop{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+.logo{width:120px;height:46px}
+.stage{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:13px}
+.stage i{font-style:normal;padding:4px 9px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.stage i.on{background:var(--blood);color:#fff;border-color:transparent}
+.stage i.nx{border-color:var(--blood);color:var(--blood);font-weight:700}
+.kpi{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+.kpi div{text-align:right}.kpi span{display:block;font-size:12px;color:var(--mut)}.kpi b{font:400 24px 'Black Han Sans';white-space:nowrap}
+.xmain{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+.stks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.stk{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--pan);display:grid;gap:6px}
+.stk.hid{background:repeating-linear-gradient(135deg,var(--pan),var(--pan) 10px,var(--pan2) 10px,var(--pan2) 20px)}
+.stk .nm{display:flex;align-items:center;gap:8px;font-weight:700}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.px{font:400 28px 'Black Han Sans';white-space:nowrap}
+.px.u{color:var(--up)}.px.d{color:var(--dn)}
+.px small{font:700 13px 'Noto Sans KR'}
+.stk svg{width:100%;height:64px;display:block}
+.vol{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:12px;color:var(--mut)}
+.vol b{display:block;color:var(--ink);font-size:14px}
+.ordr{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ordr button{min-height:40px;min-width:40px;padding:4px 8px;font-size:13px}
+.ordr output{min-width:58px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.ordr output.b{color:var(--up)}.ordr output.s{color:var(--dn)}
+.board{display:grid;gap:10px}
+.rl{padding:10px 12px;border-radius:12px;background:var(--pan);border:1px solid var(--line);line-height:2.1}
+.rl .h{display:flex;align-items:center;gap:8px;font-weight:700;line-height:1.4;margin-bottom:2px}
+.tk{margin-right:5px}
+.bl{display:inline-block;vertical-align:middle;margin-right:5px;height:30px;border-radius:6px;border:1px dashed var(--line);background:color-mix(in srgb,var(--ink) 6%,transparent);font:400 22px 'Nanum Pen Script',cursive;color:var(--gold);padding:0 6px;min-height:30px}
+.bl.nx{border-color:var(--blood);background:color-mix(in srgb,var(--blood) 12%,transparent)}
+.bl::placeholder{color:var(--mut);opacity:.5;font:13px 'Noto Sans KR';letter-spacing:2px}
+.tk.hit{background:color-mix(in srgb,var(--G) 22%,transparent);border-radius:4px;padding:0 3px}
+.tk.pv{color:var(--gold);font-weight:700}
+.tk.fresh{background:color-mix(in srgb,var(--blood) 18%,transparent);border-radius:4px;padding:0 3px}
+.banner{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#000b;padding:16px}
+.banner .card{max-width:560px;width:100%;text-align:center}
+.banner h2{font-size:clamp(30px,5vw,46px)}
+.rank li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rank{list-style:none;margin:0;padding:0;counter-reset:r}
+.rank li::before{counter-increment:r;content:counter(r);width:22px;color:var(--mut)}
+.rank li span{flex:1}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{min-height:40px;padding:6px 12px}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+
+/* ---------- 미니 ---------- */
+.ab{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.ab button{min-height:130px;font:400 clamp(20px,3vw,28px) 'Black Han Sans';color:#fff}
+.ab button:first-child{background:linear-gradient(160deg,#a3172c,#5a0a16)}
+.ab button:last-child{background:linear-gradient(160deg,#2a2a30,#0e0e12)}
+.ab small{display:block;font:400 13px 'Noto Sans KR';opacity:.75;margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tag{padding:6px 10px;border-radius:8px;border:1px solid var(--line);font-size:14px}
+.up{color:var(--G);font-weight:700}.dn{color:var(--blood);font-weight:700}
+.bignum{font:400 clamp(44px,9vw,76px) 'Black Han Sans';letter-spacing:10px;text-align:center;padding:18px 0}
+.rr{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:20px;align-items:center;margin:12px 0}
+.rr svg{width:100%;max-width:240px}
+.order{padding-left:20px}.order li.cur{font-weight:700;color:var(--blood)}
+
+
+/* ---------- 네모 세기 ---------- */
+.tgt{font:400 clamp(44px,8vw,64px) 'Black Han Sans';color:var(--blood);line-height:1}
+.ssum{font:400 clamp(30px,5vw,40px) 'Black Han Sans';line-height:1}.ssum.hitc{color:var(--G)}
+.clock{font:400 28px 'Black Han Sans';font-variant-numeric:tabular-nums}
+.brd{display:grid;gap:5px;margin:14px auto 4px;width:max-content;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.cl{aspect-ratio:1;min-width:44px;display:grid;place-items:center;border-radius:10px;background:var(--pan2);border:2px solid var(--line);font:400 clamp(20px,3.6vw,28px) 'Black Han Sans';cursor:crosshair;position:relative}
+.cl.no{background:transparent;border-color:transparent;cursor:default}
+.cl.fd::after{content:'';position:absolute;inset:4px;border-radius:6px;border:2px dotted var(--G);pointer-events:none}
+.cl.on{background:color-mix(in srgb,var(--blood) 30%,var(--pan2));border-color:var(--blood)}
+.cl.rv{background:color-mix(in srgb,var(--gold) 45%,var(--pan2));border-color:var(--gold)}
+.buzz{min-height:64px;min-width:220px;font-size:20px;border-radius:99px;box-shadow:0 6px 0 #6d0d1b}
+.buzz:active{transform:translateY(4px);box-shadow:0 2px 0 #6d0d1b}
+
+@media(max-width:900px){.xmain,.grid2{grid-template-columns:1fr}.xtop{grid-template-columns:1fr}.kpi{justify-content:flex-start}.kpi div{text-align:left}}
+@media(max-width:480px){.seat{width:70px;font-size:12px}.seat .av{width:32px;height:32px;font-size:14px}.stands{gap:6px}.stand{padding:8px 6px}.rock{width:22px;height:22px;font-size:11px}.cb{width:44px;height:62px;font-size:24px}.ab{grid-template-columns:1fr}.ab button{min-height:90px}.rr{grid-template-columns:1fr;justify-items:center}}
+</style>
+</head>
+<body>
+<div id="hub"></div>
+<div id="game" hidden>
+  <div class="gbar"><button id="back" aria-label="게임룸으로 돌아가기">← 게임룸</button><h1 id="gtitle"></h1><span id="gst"></span></div>
+  <main id="groot"></main>
+</div>
+<script>
+window.DR={games:{},
+  rnd:n=>Math.floor(Math.random()*n),
+  shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a},
+  BOTS:[['공작','#9b2335'],['여우','#c9741f'],['교수','#3f8f8a'],['도박사','#7b5cc4'],['그림자','#5d6b75'],['늑대','#2f6fb0'],['마녀','#b0397a']],
+  status(t){document.getElementById('gst').textContent=t},
+  tok:0,
+  after(f,ms){const t=DR.tok;return setTimeout(()=>{if(t===DR.tok)f()},ms)},
+  rec(){try{return JSON.parse(localStorage.getItem('dr-rec')||'{}')}catch(e){return {}}},
+  record(id,r){const all=DR.rec(),o=all[id]||{plays:0,clears:0};o.plays++;if(r.clear)o.clears++;
+    if(r.score!=null&&(o.best==null||(r.lowBetter?r.score<o.best:r.score>o.best))){o.best=r.score;o.bestText=r.text}
+    all[id]=o;try{localStorage.setItem('dr-rec',JSON.stringify(all))}catch(e){}}
+};
+</script>
+<script src="games/heavy13.js"></script>
+<script src="games/exchange.js"></script>
+<script src="games/minis.js"></script>
+<script src="games/rect.js"></script>
+<script>
+{
+const DOORS=[
+ {day:'DAY 1',sub:'첫째 날 — 서로를 모르는 열여섯 명',items:[
+  {id:'rect',type:'메인 매치 · 미니게임',name:'네모 세기',c:'#e0384f',d:'숫자 판에서 합이 타깃이 되는 네모를 세어 버저를 눌러라. 두 번 맞히면 승리.',meta:['8인','약 10분','계산 · 스피드'],nw:1},
+  {id:'heavy13',type:'감옥 매치',name:'무거운 13',c:'#2f8a5b',d:'세 받침대에 바위를 몰래 얹는다. 내 바위로 합이 13을 넘기면 전부 떠안는다.',meta:['3~7인','약 15분','눈치 · 계산']}]},
+ {day:'DAY 2',sub:'둘째 날 — 연합이 갈라지기 시작한다',items:[
+  {id:'exchange',type:'메인 매치',name:'미스터리 거래소',c:'#e8c262',d:'가려진 규칙 문장을 한 단어씩 추리하며 일곱 종목을 사고판다.',meta:['8인','약 20분','언어추리 · 경제'],nw:1},
+  {id:'roulette',type:'감옥 매치',name:'데빌 룰렛',c:'#7f9aa4',d:'여섯 칸 실린더에 실탄 한 발. 몇 번 당길지는 내가 정한다.',meta:['3~4인','약 3분','확률 · 배짱']}]},
+ {day:'HIDDEN',sub:'생활동 벽 뒤 어딘가',items:[
+  {id:'vault',type:'히든 스테이지',name:'악마의 금고',c:'#b0397a',d:'세 자리 비밀번호를 일곱 번 안에. 스트라이크와 볼만이 단서다.',meta:['1인','약 3분','추리']}]}
+];
+const hub=document.getElementById('hub'),game=document.getElementById('game'),root=document.getElementById('groot');
+function bestLine(id){const r=DR.rec()[id];if(!r)return '아직 기록 없음';return `플레이 ${r.plays}회 · 클리어 ${r.clears}회${r.bestText?` · 최고 ${r.bestText}`:''}`}
+function renderHub(){
+  const rec=DR.rec(),ids=DOORS.flatMap(d=>d.items.map(i=>i.id)),cleared=ids.filter(i=>rec[i]&&rec[i].clears).length,plays=ids.reduce((s,i)=>s+(rec[i]?rec[i].plays:0),0);
+  hub.innerHTML=`<section class="hero">
+  <svg class="ringart" viewBox="0 0 600 600" aria-hidden="true">
+    <defs><path id="cp" d="M300,300 m-232,0 a232,232 0 1,1 464,0 a232,232 0 1,1 -464,0"/>
+    <radialGradient id="hx" cx="50%" cy="40%"><stop offset="0" stop-color="#ffd987"/><stop offset="1" stop-color="#a87414"/></radialGradient></defs>
+    <circle cx="300" cy="300" r="270" fill="none" stroke="#ff4a60" stroke-opacity=".25" stroke-width="1"/>
+    <circle cx="300" cy="300" r="200" fill="none" stroke="#ff4a60" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 10"/>
+    <g class="spin"><text font-family="Black Han Sans" font-size="30" fill="#ff4a60" fill-opacity=".55" letter-spacing="6"><textPath href="#cp">DEAD AGAIN · 다시 판 위로 · DEAD AGAIN · 오직 게임만이 운명을 정한다 ·</textPath></text></g>
+    ${[0,1,2,3,4,5].map(i=>{const a=i*60*Math.PI/180+.3,x=300+232*Math.cos(a),y=300+232*Math.sin(a);return `<polygon points="${[0,1,2,3,4,5].map(j=>{const b=j*60*Math.PI/180;return `${x+11*Math.cos(b)},${y+11*Math.sin(b)}`}).join(' ')}" fill="url(#hx)" opacity=".8"/>`}).join('')}
+  </svg>
+  <div class="in"><div class="eyebrow">THE DEVIL'S PLAN 3 · DEAD AGAIN 오마주 팬게임</div>
+  <h1>데블스<br><span>게임룸</span></h1>
+  <p>한 번 떨어졌던 자들이 다시 판에 앉았다. 피스를 다 잃어도 끝이 아니다. 지면 끝난다 — 오직 게임으로만.</p>
+  <div class="cta"><a class="p" href="#exchange">미스터리 거래소 입장</a><a class="s" href="#doors">게임 고르기</a></div>
+  <div class="stats"><div><b>${ids.length}</b><span>열린 게임동</span></div><div><b>${cleared}/${ids.length}</b><span>클리어한 게임</span></div><div><b>${plays}</b><span>총 플레이</span></div></div></div>
+  </section>
+  <section class="band" id="doors">
+  ${DOORS.map(d=>`<div class="dayh"><h2>${d.day}</h2><span>${d.sub}</span></div><div class="doors">${d.items.map(i=>`<article class="door" style="--c:${i.c}">
+    <div class="tp"><span class="badge">${i.type}</span>${i.nw?'<span class="badge new">NEW</span>':''}</div>
+    <h3>${i.name}</h3><p>${i.d}</p><div class="meta">${i.meta.map(m=>`<span>${m}</span>`).join('')}</div>
+    <div class="best">${bestLine(i.id)}</div><button data-go="${i.id}">입장 →</button></article>`).join('')}</div>`).join('')}
+  </section>
+  <p class="foot">넷플릭스 「데블스 플랜: 데드 어게인」에서 영감을 받은 비공식 팬게임입니다. 상대 플레이어는 모두 가상의 봇이며, 기록은 이 브라우저에만 저장됩니다.</p>`;
+  hub.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.go});
+}
+function route(){
+  DR.tok++;
+  const id=location.hash.slice(1),g=DR.games[id];
+  if(!g){game.hidden=true;hub.hidden=false;renderHub();if(id==='doors')document.getElementById('doors').scrollIntoView();return}
+  hub.hidden=true;game.hidden=false;document.getElementById('gtitle').textContent=g.title;DR.status('');
+  root.innerHTML='';window.scrollTo(0,0);g.start(root);
+}
+document.getElementById('back').onclick=()=>{location.hash='';};
+window.addEventListener('hashchange',route);
+route();
+}
+</script>
+</body>
+</html>
