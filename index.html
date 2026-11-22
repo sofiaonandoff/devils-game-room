@@ -278,6 +278,20 @@ button.t{cursor:pointer}.t.cut{opacity:.2;outline:2px dashed var(--blood)}
 .tiles button{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:110px;padding:8px}
 .tiles small{font-weight:400;color:var(--mut);font-size:12px}
 
+/* ---------- 유배지 ---------- */
+.dpics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.dpic{width:100%;height:auto;border-radius:10px;cursor:crosshair;border:1px solid var(--line)}
+.fsvg{width:min(100%,480px);display:block;margin:10px auto;color:var(--ink)}
+.fe{cursor:pointer}
+.symb{display:grid;gap:2px;width:min(100%,420px);aspect-ratio:1;margin:10px auto}
+.sc2{min-height:0;padding:0;border-radius:3px;border:1px solid var(--line);background:var(--bg)}
+.spc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;min-height:0}
+.magic{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 46px;gap:4px;max-width:440px;margin:10px auto}
+.mg{width:100%;aspect-ratio:1;text-align:center;font:400 clamp(16px,3vw,22px) 'Black Han Sans';padding:0;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:0}
+.mg[readonly]{background:var(--gold);color:#1b1214}.mg.bad{border-color:var(--blood);background:color-mix(in srgb,var(--blood) 18%,var(--bg))}
+.ms{display:grid;place-items:center;font-size:12px;min-height:20px}
+@media(max-width:600px){.dpics{grid-template-columns:1fr}}
+
 @media(max-width:900px){.xmain,.grid2{grid-template-columns:1fr}.xtop{grid-template-columns:1fr}.kpi{justify-content:flex-start}.kpi div{text-align:left}}
 @media(max-width:480px){.seat{width:70px;font-size:12px}.seat .av{width:32px;height:32px;font-size:14px}.stands{gap:6px}.stand{padding:8px 6px}.rock{width:22px;height:22px;font-size:11px}.cb{width:44px;height:62px;font-size:24px}.ab{grid-template-columns:1fr}.ab button{min-height:90px}.rr{grid-template-columns:1fr;justify-items:center}}
 </style>
@@ -313,6 +327,7 @@ window.DR={games:{},
 <script src="games/piggy.js"></script>
 <script src="games/bingo.js"></script>
 <script src="games/wallgo.js"></script>
+<script src="games/exile.js"></script>
 <script>
 {
 const DOORS=[
@@ -331,6 +346,11 @@ const DOORS=[
  {day:'DAY 4',sub:'넷째 날 — 게스트의 등장, 땅따먹기',items:[
   {id:'bingo',type:'메인 매치',name:'경매 빙고',c:'#d6a531',d:'도형에 코인을 몰래 걸어 빙고판을 채운다. 무엇을 땄는지는 끝까지 나도 모른다.',meta:['8인','약 8분','경매 · 심리'],nw:1},
   {id:'wallgo',type:'감옥 매치',name:'벽바둑Ⅱ',c:'#7b5cc4',d:'말을 움직이고 반드시 벽을 세운다. 갈라진 땅이 가장 넓은 사람이 산다.',meta:['3인 → 1:1','약 10분','전략'],nw:1}]},
+ {day:'유배지',sub:'탈락자 넷이 모이면 한 명이 완전히 떠난다 — 그리고 부활의 길',items:[
+  {id:'diff',type:'2일차 유배지 매치',name:'달라진 그림 찾기',c:'#9fb6bf',d:'두 그림에서 달라진 일곱 군데를 가장 빨리 찾아라. 가장 늦은 한 명이 떠난다.',meta:['4인','약 3분','관찰'],nw:1},
+  {id:'fence',type:'3일차 유배지 매치',name:'울타리 치기',c:'#9fb6bf',d:'숫자에 맞춰 점을 이어 하나의 닫힌 울타리를 친다.',meta:['4인','약 5분','논리 퍼즐'],nw:1},
+  {id:'sym',type:'4일차 유배지 매치',name:'대칭 퍼즐',c:'#9fb6bf',d:'조각 셋을 옮기고 돌려 선대칭 도형을 만든다.',meta:['4인','약 4분','공간'],nw:1},
+  {id:'god',type:'부활의 길',name:'신의 시험',c:'#e8c262',d:'1의 자리만 정해진 7×7 마방진. 1시간 안에 풀면 부활, 못 풀면 끝.',meta:['1인','최대 60분','수리'],nw:1}]},
  {day:'HIDDEN',sub:'생활동 벽 뒤 어딘가',items:[
   {id:'vault',type:'히든 스테이지',name:'악마의 금고',c:'#b0397a',d:'세 자리 비밀번호를 일곱 번 안에. 스트라이크와 볼만이 단서다.',meta:['1인','약 3분','추리']}]}
 ];
