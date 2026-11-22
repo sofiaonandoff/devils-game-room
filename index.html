@@ -197,6 +197,87 @@ label.tg input{width:20px;height:20px}
 .buzz{min-height:64px;min-width:220px;font-size:20px;border-radius:99px;box-shadow:0 6px 0 #6d0d1b}
 .buzz:active{transform:translateY(4px);box-shadow:0 2px 0 #6d0d1b}
 
+/* ---------- 기억 포커 ---------- */
+.pkb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:420px;margin:12px auto}
+.slot{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;border-radius:10px;border:1px solid transparent;background:none;min-height:0}
+.slot small{font-size:12px;color:var(--mut)}
+button.slot{cursor:pointer}button.slot.sel{outline:3px solid var(--gold)}
+.pk{width:100%;max-width:74px;aspect-ratio:5/7;border-radius:8px;background:#f8f4ec;color:#1b1214;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #0002;box-shadow:0 2px 0 #0002;font-weight:700}
+.pk b{font:400 22px 'Black Han Sans';line-height:1}.pk span{font-size:20px}
+.pk.red{color:#c4162f}
+.pk.bk{background:repeating-linear-gradient(45deg,#7a0f1f,#7a0f1f 6px,#5a0a16 6px,#5a0a16 12px);border-color:#e8c26255}
+.pk.me{outline:3px solid var(--gold)}.pk.op{box-shadow:0 0 0 3px #5aa2ff}
+.pk.me.op{outline:3px solid var(--gold);box-shadow:0 0 0 6px #5aa2ff}
+/* ---------- 큐브 세기 ---------- */
+.cubefig{position:relative;height:min(62vh,460px);min-height:300px;border-radius:12px;background:radial-gradient(circle at 50% 40%,var(--pan2),var(--pan))}
+.cubefig canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+/* ---------- 돼지 저금통 ---------- */
+.pseats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pseat{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}
+.pseat.cur{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 40%,transparent)}
+.pseat.ask{border-color:var(--blood);box-shadow:0 0 0 2px color-mix(in srgb,var(--blood) 40%,transparent)}
+.pseat .sc{color:var(--gold);font-weight:700;white-space:nowrap}
+.pgrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;text-align:center}
+.pgrow small{display:block;font-size:12px;color:var(--mut)}
+.pg{display:inline-grid;place-items:center;width:54px;height:46px;border-radius:24px 24px 18px 18px;background:linear-gradient(170deg,#f2a0b3,#c9607a);color:#fff;font:400 22px 'Black Han Sans';box-shadow:inset 0 -5px #0002}
+.pg.empty{background:none;border:2px dashed var(--line);color:var(--mut);font:13px 'Noto Sans KR';box-shadow:none}
+.pcen{margin-top:16px}
+.ann{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:12px;background:color-mix(in srgb,var(--gold) 14%,transparent);margin-bottom:10px}
+.ann b{font:400 26px 'Black Han Sans'}.ann small{color:var(--mut)}
+.nb{min-width:44px;padding:0}
+.chal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chal label{display:flex;gap:6px;align-items:center;font-size:14px}.chal input{width:70px}
+/* ---------- 경매 빙고 ---------- */
+.bgb{display:grid;grid-template-columns:repeat(3,64px);gap:6px;margin:10px 0}
+.bgb.sm{grid-template-columns:repeat(3,30px);gap:3px;margin:6px 0}
+.bc{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;border:2px solid var(--line);font-size:30px;color:var(--mut)}
+.bgb.sm .bc{font-size:15px;border-radius:5px;border-width:1px}
+.bc.on{background:var(--blood);color:#fff;border-color:var(--blood)}
+.shp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.shp button,.shp>div{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:14px;border:1px solid var(--line);background:var(--bg);padding:10px}
+.shp b{font-size:44px;line-height:1}.shp small{font-weight:400;font-size:12px;color:var(--mut)}
+.shp .pr{font:400 26px 'Black Han Sans';color:var(--gold)}
+.coins{display:flex;flex-wrap:wrap;gap:8px}
+.coin{width:52px;height:52px;border-radius:50%;padding:0;background:radial-gradient(circle at 35% 30%,#ffe9a8,#c9971c);color:#3a2a00;font:400 20px 'Black Han Sans';border:2px solid #8a6a1c}
+.coin.sel{outline:3px solid var(--blood);transform:translateY(-4px)}
+.bgall{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:12px 0}
+.bgall>div{border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px}.bgall>div.me{border-color:var(--gold)}
+.bgall small{color:var(--mut)}
+/* ---------- 보석 암시장 ---------- */
+.gm{width:58px;height:80px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:inset 0 -4px #0003;flex:none}
+.gm b{font:400 26px 'Black Han Sans';line-height:1}.gm small{font-size:11px}
+.gm.D{background:linear-gradient(160deg,#9fe3ff,#3a8fc4)}.gm.G{background:linear-gradient(160deg,#ffe08a,#c9971c);color:#3a2a00}.gm.S{background:linear-gradient(160deg,#e6eaee,#8d99a3);color:#1d2328}.gm.B{background:linear-gradient(160deg,#e2a47a,#9a5a32)}.gm.X{background:linear-gradient(160deg,#444,#111);color:#ff5a6e}
+.gm.bk{background:repeating-linear-gradient(45deg,#2b2226,#2b2226 6px,#3a2e33 6px,#3a2e33 12px);color:#e8c262}
+.gm.mine{outline:3px solid var(--gold)}
+.gmarket{display:grid;gap:14px}
+.gbuy{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.gslot,.gseat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:10px;border:1px solid transparent;background:none;font-size:13px;min-height:0}
+button.gslot,button.gseat{cursor:pointer;border-color:var(--line)}button.gslot:hover,button.gseat:hover{border-color:var(--gold)}
+.gseats{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.gseat small{color:var(--mut);font-size:11px}.gseat.cur{background:color-mix(in srgb,var(--blood) 14%,transparent)}.gseat.me span{color:var(--gold);font-weight:700}
+/* ---------- 벽바둑Ⅱ ---------- */
+.wboard{--wall:var(--blood);display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:min(100%,460px);aspect-ratio:1;margin:10px auto;border:4px solid var(--ink);border-radius:6px}
+.wc{border:4px solid var(--line);display:grid;place-items:center;background:var(--bg);padding:0;min-height:0;border-radius:0}
+button.wc{cursor:pointer}.wc.lg{background:color-mix(in srgb,var(--gold) 30%,var(--bg))}.wc.lg.br{background:color-mix(in srgb,var(--blood) 25%,var(--bg))}
+.wc.sl{outline:3px solid var(--gold);outline-offset:-6px}
+.wp{width:62%;height:62%;display:block;box-shadow:inset 0 -4px #0003}.wp.C{border-radius:50%}.wp.S{border-radius:4px}
+/* ---------- 잔디 깔기 ---------- */
+.park{--cs:clamp(22px,4.6vw,36px);display:grid;gap:2px;width:max-content;max-width:100%;margin:10px auto;overflow:auto}
+.pc0{width:var(--cs);height:var(--cs)}
+.pc{width:var(--cs);height:var(--cs);border-radius:4px;background:color-mix(in srgb,#8a6a3a 30%,var(--pan2));border:1px solid var(--line);position:relative;padding:0;min-height:0;display:grid;place-items:center}
+button.pc{cursor:pointer}
+.pc.pv{outline:2px solid var(--G);background:color-mix(in srgb,var(--G) 45%,var(--pan2))}.pc.pvx{outline:2px solid var(--blood);background:color-mix(in srgb,var(--blood) 35%,var(--pan2))}
+.pc .tree{width:70%;height:70%;border-radius:50%;background:radial-gradient(circle,#2e6b2e,#174017);display:block}
+.pc .man{font-style:normal;font-size:11px;font-weight:700;background:#55555f;color:#fff;border-radius:50%;width:80%;height:80%;display:grid;place-items:center}
+.tl{--ts:22px;display:grid;gap:2px}.tl.sm{--ts:12px;gap:1px}
+.tl span,.tl .t{width:var(--ts);height:var(--ts)}
+.t{border-radius:3px;background:#3fa06c;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;padding:0;min-height:0;border:0}
+.t.N{background:#1f6b45}.t.O{background:radial-gradient(circle,var(--pan) 28%,#3fa06c 30%)}
+button.t{cursor:pointer}.t.cut{opacity:.2;outline:2px dashed var(--blood)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.tiles button{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:110px;padding:8px}
+.tiles small{font-weight:400;color:var(--mut);font-size:12px}
+
 @media(max-width:900px){.xmain,.grid2{grid-template-columns:1fr}.xtop{grid-template-columns:1fr}.kpi{justify-content:flex-start}.kpi div{text-align:left}}
 @media(max-width:480px){.seat{width:70px;font-size:12px}.seat .av{width:32px;height:32px;font-size:14px}.stands{gap:6px}.stand{padding:8px 6px}.rock{width:22px;height:22px;font-size:11px}.cb{width:44px;height:62px;font-size:24px}.ab{grid-template-columns:1fr}.ab button{min-height:90px}.rr{grid-template-columns:1fr;justify-items:center}}
 </style>
@@ -225,15 +306,31 @@ window.DR={games:{},
 <script src="games/exchange.js"></script>
 <script src="games/minis.js"></script>
 <script src="games/rect.js"></script>
+<script src="games/cubes.js"></script>
+<script src="games/grass.js"></script>
+<script src="games/poker.js"></script>
+<script src="games/gem.js"></script>
+<script src="games/piggy.js"></script>
+<script src="games/bingo.js"></script>
+<script src="games/wallgo.js"></script>
 <script>
 {
 const DOORS=[
- {day:'DAY 1',sub:'첫째 날 — 서로를 모르는 열여섯 명',items:[
-  {id:'rect',type:'메인 매치 · 미니게임',name:'네모 세기',c:'#e0384f',d:'숫자 판에서 합이 타깃이 되는 네모를 세어 버저를 눌러라. 두 번 맞히면 승리.',meta:['8인','약 10분','계산 · 스피드'],nw:1},
+ {day:'DAY 1',sub:'첫째 날 — 메인 매치 〈양자택일〉의 미니게임 넷, 그리고 첫 감옥',items:[
+  {id:'cubes',type:'메인 매치 · 미니게임 1',name:'큐브 세기',c:'#e0384f',d:'계단처럼 쌓인 입체의 큐브를 센다. 돌려 볼 수 있고, 틀리면 20초 잠금.',meta:['8인','약 5분','공간 · 스피드'],nw:1},
+  {id:'rect',type:'메인 매치 · 미니게임 2',name:'네모 세기',c:'#e0384f',d:'숫자 판에서 합이 타깃이 되는 네모를 세어 버저를 눌러라. 두 번 맞히면 승리.',meta:['8인','약 10분','계산 · 스피드']},
+  {id:'grass',type:'메인 매치 · 미니게임 3',name:'잔디 깔기',c:'#e0384f',d:'번호가 곧 승점인 잔디 타일을 공원에 깐다. 큰 번호일수록 늦게 놓는다.',meta:['8인','약 10분','퍼즐 · 선택'],nw:1},
+  {id:'poker',type:'메인 매치 · 미니게임 4',name:'기억 포커',c:'#e0384f',d:'20초 동안 외운 16장 가운데 두 장을 골라 공유 카드와 족보를 만든다.',meta:['1:1 × 5','약 8분','기억 · 포커'],nw:1},
   {id:'heavy13',type:'감옥 매치',name:'무거운 13',c:'#2f8a5b',d:'세 받침대에 바위를 몰래 얹는다. 내 바위로 합이 13을 넘기면 전부 떠안는다.',meta:['3~7인','약 15분','눈치 · 계산']}]},
  {day:'DAY 2',sub:'둘째 날 — 연합이 갈라지기 시작한다',items:[
-  {id:'exchange',type:'메인 매치',name:'미스터리 거래소',c:'#e8c262',d:'가려진 규칙 문장을 한 단어씩 추리하며 일곱 종목을 사고판다.',meta:['8인','약 20분','언어추리 · 경제'],nw:1},
+  {id:'exchange',type:'메인 매치',name:'미스터리 거래소',c:'#e8c262',d:'가려진 규칙 문장을 한 단어씩 추리하며 일곱 종목을 사고판다.',meta:['8인','약 20분','언어추리 · 경제']},
   {id:'roulette',type:'감옥 매치',name:'데빌 룰렛',c:'#7f9aa4',d:'여섯 칸 실린더에 실탄 한 발. 몇 번 당길지는 내가 정한다.',meta:['3~4인','약 3분','확률 · 배짱']}]},
+ {day:'DAY 3',sub:'셋째 날 — 숨은 마니또와 저금통',items:[
+  {id:'gem',type:'메인 매치',name:'보석 암시장',c:'#3a8fc4',d:'뒤집힌 카드를 바꿔 구매자가 원하는 보석을 쥔다. 최종 승점은 마니또의 점수와 곱해진다.',meta:['9인','약 10분','추리 · 기억'],nw:1},
+  {id:'piggy',type:'감옥 매치',name:'돼지 저금통',c:'#c9607a',d:'건네받은 저금통 속 동전을 답하고, 틀린 답을 의심하라. 저금통이 돌수록 외울 것이 는다.',meta:['4인','약 10분','기억 · 의심'],nw:1}]},
+ {day:'DAY 4',sub:'넷째 날 — 게스트의 등장, 땅따먹기',items:[
+  {id:'bingo',type:'메인 매치',name:'경매 빙고',c:'#d6a531',d:'도형에 코인을 몰래 걸어 빙고판을 채운다. 무엇을 땄는지는 끝까지 나도 모른다.',meta:['8인','약 8분','경매 · 심리'],nw:1},
+  {id:'wallgo',type:'감옥 매치',name:'벽바둑Ⅱ',c:'#7b5cc4',d:'말을 움직이고 반드시 벽을 세운다. 갈라진 땅이 가장 넓은 사람이 산다.',meta:['3인 → 1:1','약 10분','전략'],nw:1}]},
  {day:'HIDDEN',sub:'생활동 벽 뒤 어딘가',items:[
   {id:'vault',type:'히든 스테이지',name:'악마의 금고',c:'#b0397a',d:'세 자리 비밀번호를 일곱 번 안에. 스트라이크와 볼만이 단서다.',meta:['1인','약 3분','추리']}]}
 ];
@@ -253,7 +350,7 @@ function renderHub(){
   <div class="in"><div class="eyebrow">THE DEVIL'S PLAN 3 · DEAD AGAIN 오마주 팬게임</div>
   <h1>데블스<br><span>게임룸</span></h1>
   <p>한 번 떨어졌던 자들이 다시 판에 앉았다. 피스를 다 잃어도 끝이 아니다. 지면 끝난다 — 오직 게임으로만.</p>
-  <div class="cta"><a class="p" href="#exchange">미스터리 거래소 입장</a><a class="s" href="#doors">게임 고르기</a></div>
+  <div class="cta"><a class="p" href="#bingo">새 게임: 경매 빙고</a><a class="s" href="#doors">게임 고르기</a></div>
   <div class="stats"><div><b>${ids.length}</b><span>열린 게임동</span></div><div><b>${cleared}/${ids.length}</b><span>클리어한 게임</span></div><div><b>${plays}</b><span>총 플레이</span></div></div></div>
   </section>
   <section class="band" id="doors">
