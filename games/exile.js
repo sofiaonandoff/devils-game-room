@@ -147,27 +147,60 @@ function symNew(){
 function symLoop(){if(G.game!='sym'||G.R.done)return;if(raceCheck(G.R,res=>{G.res=res;symDraw()}))return;const b=$('#rb');if(b)b.innerHTML=raceBox(G.R);DR.after(symLoop,500)}
 const placed=()=>G.pieces.filter(p=>p.at).flatMap(p=>p.cells.map(([x,y])=>[x+p.at[0],y+p.at[1]]));
 function symCheck(){if(G.pieces.some(p=>!p.at))return false;const c=placed();return connectedC(c)&&isSym(c)}
+const PCOL=['#e0384f','#e8c262','#2f6fb0'];
+function fits(p,at){const occ=new Set(G.pieces.filter(q=>q!==p&&q.at).flatMap(q=>q.cells.map(([x,y])=>(x+q.at[0])+','+(y+q.at[1]))));
+  return p.cells.every(([x,y])=>{const a=x+at[0],b=y+at[1];return a>=0&&b>=0&&a<G.B&&b<G.B&&!occ.has(a+','+b)})}
+function afterMove(){const nx=G.pieces.find(q=>!q.at);
+  if(symCheck()){G.R.me=Date.now()-G.R.t0;raceCheck(G.R,res=>G.res=res);G.msg=''}else G.msg=nx?'':'세 조각을 모두 놓았지만 아직 선대칭이 아니다.';symDraw()}
 function symDraw(){
   DR.status('대칭 퍼즐');const occ={};G.pieces.forEach(p=>{if(p.at)p.cells.forEach(([x,y])=>occ[(x+p.at[0])+','+(y+p.at[1])]=p.id)});
-  const PC=['#e0384f','#e8c262','#2f6fb0'];
   const pieceMini=p=>{const w=Math.max(...p.cells.map(c=>c[0]))+1,h=Math.max(...p.cells.map(c=>c[1]))+1,S=new Set(p.cells.map(c=>c.join()));
-    return `<div class="tl" style="--ts:18px;grid-template-columns:repeat(${w},var(--ts))">${[...Array(h)].map((_,y)=>[...Array(w)].map((_,x)=>S.has(x+','+y)?`<span class="t" style="background:${PC[p.id]}"></span>`:'<span></span>').join('')).join('')}</div>`};
+    return `<div class="tl" style="--ts:22px;grid-template-columns:repeat(${w},var(--ts))">${[...Array(h)].map((_,y)=>[...Array(w)].map((_,x)=>S.has(x+','+y)?`<span class="t" data-g="${x},${y}" style="background:${PCOL[p.id]}"></span>`:'<span></span>').join('')).join('')}</div>`};
   root.innerHTML=`<div class="grid2"><div class="card"><p class="k">4일차 유배지 매치 · 대칭 퍼즐</p>
-  <div class="symb" style="grid-template-columns:repeat(${G.B},1fr)">${[...Array(G.B)].map((_,y)=>[...Array(G.B)].map((_,x)=>{const o=occ[x+','+y];return `<button class="sc2" data-xy="${x},${y}" style="${o!=null?`background:${PC[o]}`:''}" aria-label="${x+1},${y+1}"></button>`}).join('')).join('')}</div>
-  <p class="mut" style="font-size:13px">조각을 고르고 돌린 뒤 판을 누르면, 누른 칸이 조각의 왼쪽 위가 된다. 놓인 조각을 누르면 다시 집는다. 세 조각을 모두 써서 <b>선대칭</b> 도형(가로·세로·대각선 축 어느 것이든)을 만들면 완성.</p><p class="warn">${G.msg}</p></div>
-  <div class="stackg"><div class="card"><p class="k">조각 (뒤집기 불가)</p><div class="row" style="align-items:flex-start;gap:14px">${G.pieces.map(p=>`<button class="spc ${G.sel===p.id?'sel':''}" data-p="${p.id}">${pieceMini(p)}<small>${p.at?'놓임':'대기'}</small></button>`).join('')}</div>
+  <div class="symb" id="sb" style="grid-template-columns:repeat(${G.B},1fr)">${[...Array(G.B)].map((_,y)=>[...Array(G.B)].map((_,x)=>{const o=occ[x+','+y];return `<div class="sc2 ${o!=null&&G.sel===o?'selp':''}" data-xy="${x},${y}" ${o!=null?`data-op="${o}" style="background:${PCOL[o]}"`:''}></div>`}).join('')).join('')}</div>
+  <p class="mut" style="font-size:13px">조각을 <b>끌어서</b> 판에 놓아 보세요. 놓인 조각도 끌어서 옮기고, 판 밖으로 끌면 되돌아간다. 조각을 누르면 고르고, 돌리기 버튼(또는 R 키)으로 돌린다. 세 조각으로 <b>선대칭</b> 도형(가로·세로·대각선 축 어느 것이든)을 만들면 완성.</p><p class="warn">${G.msg}</p></div>
+  <div class="stackg"><div class="card"><p class="k">조각 (뒤집기 불가)</p><div class="row" style="align-items:flex-start;gap:14px">${G.pieces.map(p=>`<div class="spc ${G.sel===p.id?'sel':''} ${p.at?'used':''}" data-p="${p.id}" tabindex="0" role="button" aria-label="조각 ${p.id+1}">${pieceMini(p)}<small>${p.at?'판 위':'끌어서 놓기'}</small></div>`).join('')}</div>
   <div class="row" style="margin-top:10px"><button id="rt">고른 조각 돌리기 ↻</button><button id="rs">모두 거두기</button></div></div>
   <div class="card" id="rb">${raceBox(G.R)}</div>${G.res?`<div class="card">${raceEnd(G.R,G.res)}</div>`:''}</div></div>`;
-  root.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{G.sel=+b.dataset.p;symDraw()});
-  root.querySelectorAll('[data-xy]').forEach(b=>b.onclick=()=>{if(G.res)return;const [x,y]=b.dataset.xy.split(',').map(Number),o=occ[x+','+y];
-    if(o!=null){G.pieces[o].at=null;G.sel=o;return symDraw()}
-    const p=G.pieces[G.sel];if(!p)return;const prev=p.at;p.at=null;const cells=p.cells.map(([a,c])=>[a+x,c+y]);
-    const occ2=new Set(placed().map(q=>q.join()));
-    if(cells.some(([a,c])=>a>=G.B||c>=G.B||occ2.has(a+','+c))){p.at=prev;G.msg='거기에는 놓을 수 없다.';return symDraw()}
-    p.at=[x,y];G.msg='';const nx=G.pieces.find(q=>!q.at);if(nx)G.sel=nx.id;
-    if(symCheck()){G.R.me=Date.now()-G.R.t0;raceCheck(G.R,res=>G.res=res)}else if(!nx)G.msg='세 조각을 모두 놓았지만 아직 선대칭이 아니다.';symDraw()});
-  on('rt',()=>{const p=G.pieces[G.sel];if(p&&!p.at){p.cells=rotC(p.cells);symDraw()}});
-  on('rs',()=>{G.pieces.forEach(p=>p.at=null);symDraw()});on('re',symNew);
+  bindDrag();
+  on('rt',rotateSel);
+  on('rs',()=>{G.pieces.forEach(p=>p.at=null);G.msg='';symDraw()});on('re',symNew);
+  root.onkeydown=e=>{if((e.key=='r'||e.key=='R')&&G.game=='sym'){rotateSel();e.preventDefault()}};
+}
+function rotateSel(){if(G.res)return;const p=G.pieces[G.sel];if(!p)return;const old=p.cells;p.cells=rotC(p.cells);
+  if(p.at&&!fits(p,p.at)){p.cells=old;G.msg='판 위에서는 그 자리에서 돌릴 공간이 없다. 판 밖으로 꺼내서 돌려 보세요.';return symDraw()}
+  if(p.at)return afterMove();symDraw()}
+function bindDrag(){
+  const sb=$('#sb');if(!sb)return;
+  const start=(e,p,grab)=>{if(G.res)return;e.preventDefault();
+    const rect=sb.getBoundingClientRect(),cs=rect.width/G.B,ghost=document.createElement('div');ghost.className='ghost';
+    const w=Math.max(...p.cells.map(c=>c[0]))+1,h=Math.max(...p.cells.map(c=>c[1]))+1,S=new Set(p.cells.map(c=>c.join()));
+    ghost.style.cssText=`position:fixed;left:0;top:0;z-index:50;pointer-events:none;display:grid;gap:2px;grid-template-columns:repeat(${w},${cs-2}px);opacity:.85`;
+    ghost.innerHTML=[...Array(h)].map((_,y)=>[...Array(w)].map((_,x)=>`<span style="width:${cs-2}px;height:${cs-2}px;border-radius:3px;${S.has(x+','+y)?`background:${PCOL[p.id]};box-shadow:0 4px 12px #0006`:''}"></span>`).join('')).join('');
+    document.body.appendChild(ghost);
+    const sx=e.clientX,sy=e.clientY;let moved=false,target=null;
+    const pos=ev=>{ghost.style.transform=`translate(${ev.clientX-(grab[0]+.5)*cs}px,${ev.clientY-(grab[1]+.5)*cs}px)`;
+      const r=sb.getBoundingClientRect();const cx=Math.floor((ev.clientX-r.left)/cs),cy=Math.floor((ev.clientY-r.top)/cs);
+      const inside=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+      target=inside?[cx-grab[0],cy-grab[1]]:null;
+      const ok=target&&fits(p,target);ghost.style.filter=target&&!ok?'grayscale(1) brightness(.6)':'';
+      sb.querySelectorAll('.pv2').forEach(x=>x.classList.remove('pv2','bad2'));
+      if(target)p.cells.forEach(([x,y])=>{const c=sb.querySelector(`[data-xy="${x+target[0]},${y+target[1]}"]`);if(c)c.classList.add('pv2',ok?'x':'bad2')})};
+    pos(e);
+    const mv=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>5)moved=true;pos(ev)};
+    const up=ev=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);ghost.remove();
+      G.sel=p.id;
+      if(!moved){return symDraw()}
+      if(target&&fits(p,target)){p.at=target;G.msg=''}
+      else if(!target){p.at=null;G.msg=''}
+      else G.msg='거기에는 놓을 수 없다.';
+      afterMove()};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
+  };
+  root.querySelectorAll('[data-p]').forEach(el=>{el.onpointerdown=e=>{const p=G.pieces[+el.dataset.p];const g=e.target.closest('[data-g]');
+      const grab=g?g.dataset.g.split(',').map(Number):p.cells[0];if(p.at){p.at=null}start(e,p,grab)};
+    el.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){G.sel=+el.dataset.p;symDraw()}}});
+  sb.querySelectorAll('[data-op]').forEach(el=>el.onpointerdown=e=>{const p=G.pieces[+el.dataset.op],[x,y]=el.dataset.xy.split(',').map(Number);start(e,p,[x-p.at[0],y-p.at[1]])});
 }
 
 /* =================== 신의 시험 =================== */
@@ -213,7 +246,6 @@ function intro(k){
   root.innerHTML=`<div class="card"><p class="k">${tp}</p><h2>${h}</h2><div class="rule"><ul>${rules}</ul></div><p class="mut" style="font-size:14px">${note}</p><button class="go" id="go">${k=='god'?'신의 시험에 도전':'시작'}</button></div>`;
   on('go',go);
 }
-DR.games.diff={title:'달라진 그림 찾기',start(r){root=r;G={};intro('diff')}};
 DR.games.fence={title:'울타리 치기',start(r){root=r;G={};intro('fence')}};
 DR.games.sym={title:'대칭 퍼즐',start(r){root=r;G={};intro('sym')}};
 DR.games.god={title:'신의 시험',start(r){root=r;G={};intro('god')}};

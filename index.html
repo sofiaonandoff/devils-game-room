@@ -260,6 +260,8 @@ button.gslot,button.gseat{cursor:pointer;border-color:var(--line)}button.gslot:h
 .wc{border:4px solid var(--line);display:grid;place-items:center;background:var(--bg);padding:0;min-height:0;border-radius:0}
 button.wc{cursor:pointer}.wc.lg{background:color-mix(in srgb,var(--gold) 30%,var(--bg))}.wc.lg.br{background:color-mix(in srgb,var(--blood) 25%,var(--bg))}
 .wc.sl{outline:3px solid var(--gold);outline-offset:-6px}
+.wc.afrom{background:color-mix(in srgb,var(--gold) 22%,var(--bg));outline:2px dashed var(--gold);outline-offset:-6px}
+.wc.ato{background:color-mix(in srgb,var(--gold) 38%,var(--bg));animation:pop .5s}
 .wp{width:62%;height:62%;display:block;box-shadow:inset 0 -4px #0003}.wp.C{border-radius:50%}.wp.S{border-radius:4px}
 /* ---------- 잔디 깔기 ---------- */
 .park{--cs:clamp(22px,4.6vw,36px);display:grid;gap:2px;width:max-content;max-width:100%;margin:10px auto;overflow:auto}
@@ -284,7 +286,10 @@ button.t{cursor:pointer}.t.cut{opacity:.2;outline:2px dashed var(--blood)}
 .fsvg{width:min(100%,480px);display:block;margin:10px auto;color:var(--ink)}
 .fe{cursor:pointer}
 .symb{display:grid;gap:2px;width:min(100%,420px);aspect-ratio:1;margin:10px auto}
-.sc2{min-height:0;padding:0;border-radius:3px;border:1px solid var(--line);background:var(--bg)}
+.sc2{border-radius:3px;border:1px solid var(--line);background:var(--bg);touch-action:none;cursor:grab}
+.sc2.selp{outline:2px solid var(--ink);outline-offset:-2px}.sc2.pv2{outline:3px solid var(--G);outline-offset:-3px}.sc2.pv2.bad2{outline-color:var(--blood)}
+.symb{touch-action:none;user-select:none;-webkit-user-select:none}
+.spc{border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.spc.used{opacity:.45}.spc small{font-size:12px;color:var(--mut)}
 .spc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;min-height:0}
 .magic{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 46px;gap:4px;max-width:440px;margin:10px auto}
 .mg{width:100%;aspect-ratio:1;text-align:center;font:400 clamp(16px,3vw,22px) 'Black Han Sans';padding:0;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:0}
@@ -347,7 +352,6 @@ const DOORS=[
   {id:'bingo',type:'메인 매치',name:'경매 빙고',c:'#d6a531',d:'도형에 코인을 몰래 걸어 빙고판을 채운다. 무엇을 땄는지는 끝까지 나도 모른다.',meta:['8인','약 8분','경매 · 심리'],nw:1},
   {id:'wallgo',type:'감옥 매치',name:'벽바둑Ⅱ',c:'#7b5cc4',d:'말을 움직이고 반드시 벽을 세운다. 갈라진 땅이 가장 넓은 사람이 산다.',meta:['3인 → 1:1','약 10분','전략'],nw:1}]},
  {day:'유배지',sub:'탈락자 넷이 모이면 한 명이 완전히 떠난다 — 그리고 부활의 길',items:[
-  {id:'diff',type:'2일차 유배지 매치',name:'달라진 그림 찾기',c:'#9fb6bf',d:'두 그림에서 달라진 일곱 군데를 가장 빨리 찾아라. 가장 늦은 한 명이 떠난다.',meta:['4인','약 3분','관찰'],nw:1},
   {id:'fence',type:'3일차 유배지 매치',name:'울타리 치기',c:'#9fb6bf',d:'숫자에 맞춰 점을 이어 하나의 닫힌 울타리를 친다.',meta:['4인','약 5분','논리 퍼즐'],nw:1},
   {id:'sym',type:'4일차 유배지 매치',name:'대칭 퍼즐',c:'#9fb6bf',d:'조각 셋을 옮기고 돌려 선대칭 도형을 만든다.',meta:['4인','약 4분','공간'],nw:1},
   {id:'god',type:'부활의 길',name:'신의 시험',c:'#e8c262',d:'1의 자리만 정해진 7×7 마방진. 1시간 안에 풀면 부활, 못 풀면 끝.',meta:['1인','최대 60분','수리'],nw:1}]},

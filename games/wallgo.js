@@ -71,22 +71,27 @@ function step(){
   if(G.phase=='place'){
     if(G.pi>=G.placeSeq.length){G.phase='play';G.turn=0;return step()}
     const [o]=G.placeSeq[G.pi];
-    if(o!==0){render();DR.after(()=>{botPlace(o);G.pi++;step()},700);return}
+    if(o!==0){render();DR.after(()=>{const b=botPlace(o);G.anim={to:b,who:o};render();DR.after(()=>{G.anim=null;G.pi++;step()},900)},900);return}
     G.placeKind=kindsLeft(0)[0];return render();
   }
   if(G.phase=='play'){
     const o=G.order[G.turn%G.order.length];
     if(!G.B.pcs.some(p=>p.o==o&&moves(G.B,p,false).length)){G.log.unshift(`${G.names[o]}: 움직일 말이 없어 넘어간다`);G.turn++;return step()}
     if(o!==0){render();DR.after(()=>{const t=botTurn(G.B,o,G.owners);if(!t){G.turn++;return step()}const p=G.B.pcs[t.pi];
-      G.log.unshift(`${G.names[o]}: ${p.kind=='S'?'사각':'원형'} 말 → ${'ABCDEFG'[t.m.c]}${t.m.r+1}, ${DN[t.d]}에 벽`);
-      p.r=t.m.r;p.c=t.m.c;setWall(G.B,p.r,p.c,t.d,1);after()},900);return}
+      // 1단계: 움직일 말과 갈 곳을 보여 준다
+      G.anim={from:[p.r,p.c],to:[t.m.r,t.m.c],who:o};render();
+      DR.after(()=>{// 2단계: 말을 옮긴다
+        p.r=t.m.r;p.c=t.m.c;G.anim={to:[p.r,p.c],who:o,moved:1};G.log.unshift(`${G.names[o]}: ${p.kind=='S'?'사각':'원형'} 말 → ${'ABCDEFG'[t.m.c]}${t.m.r+1}`);render();
+        DR.after(()=>{// 3단계: 벽을 세운다
+          setWall(G.B,p.r,p.c,t.d,1);G.anim={to:[p.r,p.c],who:o,wall:[p.r,p.c,t.d]};G.log.unshift(`${G.names[o]}: ${DN[t.d]}에 벽`);render();
+          DR.after(()=>{G.anim=null;after()},1000)},1000)},1100)},700);return}
     return render();
   }
 }
 function botPlace(o){
   const k=kindsLeft(o);const kind=G.second?'S':k[rnd(k.length)];let best=null,bs=-1e9;
   for(let r=0;r<S;r++)for(let c=0;c<S;c++){if(occ(G.B,r,c))continue;const B=clone(G.B);B.pcs.push({o,kind,r,c});const t=territory(B,G.owners);const v=t[o]+Math.random()*2-(r==0||c==0||r==S-1||c==S-1?1:0);if(v>bs){bs=v;best=[r,c]}}
-  G.B.pcs.push({o,kind,r:best[0],c:best[1]});G.log.unshift(`${G.names[o]}: ${kind=='S'?'사각':'원형'} 말을 ${'ABCDEFG'[best[1]]}${best[0]+1}에`);
+  G.B.pcs.push({o,kind,r:best[0],c:best[1]});G.log.unshift(`${G.names[o]}: ${kind=='S'?'사각':'원형'} 말을 ${'ABCDEFG'[best[1]]}${best[0]+1}에`);return best;
 }
 function after(){
   const sc=scoreOf(G.B,G.owners);
@@ -109,13 +114,15 @@ function autoRound(){// 내가 빠진 2라운드: 봇끼리 빠르게
 }
 /* ---------- 화면 ---------- */
 function cellHTML(r,c){
-  const B=G.B,p=B.pcs.find(q=>q.r==r&&q.c==c),sty=[0,1,2,3].map(d=>{const w=wallAt(B,r,c,d);return w==1?'var(--wall)':w==2?'transparent':'var(--line)'});
+  const B=G.B,p=B.pcs.find(q=>q.r==r&&q.c==c),A=G.anim,nw=A&&A.wall,isNew=(d)=>{if(!nw)return false;const [wr,wc,wd]=nw;if(wr==r&&wc==c&&wd==d)return true;const nr=wr+DR4[wd][0],nc=wc+DR4[wd][1];return nr==r&&nc==c&&(wd+2)%4==d};
+  const sty=[0,1,2,3].map(d=>{const w=wallAt(B,r,c,d);return isNew(d)?'var(--gold)':w==1?'var(--wall)':w==2?'transparent':'var(--line)'});
+  const aFrom=A&&A.from&&A.from[0]==r&&A.from[1]==c,aTo=A&&A.to&&A.to[0]==r&&A.to[1]==c;
   const legal=G.move===null&&G.sel!=null?G.legal.find(m=>m.r==r&&m.c==c):null;
   const reg=G.done?G.sc.R.id[r][c]:null,regOwner=G.done?(B.pcs.find(q=>G.sc.R.id[q.r][q.c]==reg)||{}).o:null;
   const placeable=G.phase=='place'&&G.placeSeq[G.pi]&&G.placeSeq[G.pi][0]===0&&!p;
   const selectable=G.phase=='play'&&G.order[G.turn%G.order.length]===0&&p&&p.o===0&&G.move==null;
   const tag=placeable||legal||selectable?'button':'div';
-  return `<${tag} class="wc ${legal?(legal.brk?'lg br':'lg'):''} ${G.sel!=null&&G.B.pcs[G.sel]===p?'sl':''}" data-rc="${r},${c}" style="border-top-color:${sty[0]};border-right-color:${sty[1]};border-bottom-color:${sty[2]};border-left-color:${sty[3]};${regOwner!=null?`background:color-mix(in srgb,${COLS[regOwner]} 22%,transparent)`:''}" ${tag=='button'?`aria-label="${'ABCDEFG'[c]}${r+1}"`:''}>
+  return `<${tag} class="wc ${aFrom?'afrom':''} ${aTo?'ato':''} ${legal?(legal.brk?'lg br':'lg'):''} ${G.sel!=null&&G.B.pcs[G.sel]===p?'sl':''}" data-rc="${r},${c}" style="border-top-color:${sty[0]};border-right-color:${sty[1]};border-bottom-color:${sty[2]};border-left-color:${sty[3]};${regOwner!=null?`background:color-mix(in srgb,${COLS[regOwner]} 22%,transparent)`:''}" ${tag=='button'?`aria-label="${'ABCDEFG'[c]}${r+1}"`:''}>
   ${p?`<i class="wp ${p.kind}" style="background:${COLS[p.o]}"></i>`:''}</${tag}>`;
 }
 function render(){
@@ -124,7 +131,7 @@ function render(){
   const myTurn=o===0;let panel='';
   if(G.phase=='place')panel=myTurn?`<p class="k">말 놓기</p><h3 style="font-size:22px">${G.second?'사각 말을':'놓을 말을 고르고'} 빈칸을 누르세요</h3>${G.second?'':`<div class="row">${kindsLeft(0).map(k=>`<button class="${G.placeKind==k?'sel':''}" data-k="${k}">${k=='S'?'사각 말 (곧게 1~2칸)':'원형 말 (1칸 + 꺾어서 1칸)'}</button>`).join('')}</div>`}`:`<p class="mut">${G.names[o]}가 말을 놓는 중…</p>`;
   else if(G.phase=='play'){
-    if(!myTurn)panel=`<p class="mut">${G.names[o]}의 차례…</p>`;
+    if(!myTurn){const A=G.anim;panel=`<p class="k">${G.names[o]}의 차례</p><h3 style="font-size:22px">${!A?'고민 중…':A.wall?'벽을 세웠다':A.moved?'말을 옮겼다 — 이제 벽을 세운다':'이 말을 움직이려 한다'}</h3>`}
     else if(G.move==null)panel=`<p class="k">내 차례 · 90초 안에 이동 → 벽</p><h3 style="font-size:22px">${G.sel==null?'움직일 내 말을 누르세요':'갈 칸을 누르세요'}</h3>
       ${!G.second&&!G.broke[0]?`<label class="tg"><input type="checkbox" id="bk" ${G.breakOn?'checked':''}> 벽 부수기 (1라운드에 한 번, 길의 벽 하나를 부수고 지나간다)</label>`:''}
       ${G.sel!=null?'<button id="cs">다른 말 고르기</button>':''}`;
