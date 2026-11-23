@@ -223,6 +223,33 @@ function panMagic(){
   let p2,p3;S.forEach((row,i)=>row.forEach((v,j)=>{if(v==2)p2=[i,j];if(v==3)p3=[i,j]}));
   return {S,one:[r0,c0],two:p2,step:[(p3[0]-p2[0]+n)%n,(p3[1]-p2[1]+n)%n]};
 }
+// 1이 같은 자리에 오는 정답 예시를 이 방식으로 만들 수 있는 만큼 모두 만든다 (매개변수 × 회전·뒤집기 8가지 × 판 밀기)
+function godVariants(){
+  if(G.variants)return G.variants;
+  const n=7,g=(x,y)=>{x=Math.abs(x);while(y){[x,y]=[y,x%y]}return x},ok=x=>x%n!=0&&g(((x%n)+n)%n,n)==1,seen=new Set(),out=[];
+  const T=[(i,j)=>[i,j],(i,j)=>[j,n-1-i],(i,j)=>[n-1-i,n-1-j],(i,j)=>[n-1-j,i],(i,j)=>[i,n-1-j],(i,j)=>[n-1-i,j],(i,j)=>[j,i],(i,j)=>[n-1-j,n-1-i]];
+  for(let a=1;a<n;a++)for(let b=1;b<n;b++)for(let c=1;c<n;c++)for(let d=1;d<n;d++){
+    if(![a,b,a+b,a-b,c,d,c+d,c-d,a*d-b*c].every(ok))continue;
+    const M=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>n*((a*i+b*j)%n)+((c*i+d*j)%n)+1));
+    T.forEach(t=>{const R=[...Array(n)].map(()=>Array(n));M.forEach((row,i)=>row.forEach((v,j)=>{const [x,y]=t(i,j);R[x][y]=v}));
+      let i0,j0;R.forEach((row,i)=>row.forEach((v,j)=>{if(v==1){i0=i;j0=j}}));
+      const S=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>R[(i-G.one[0]+i0+n*2)%n][(j-G.one[1]+j0+n*2)%n])),k=S.flat().join(',');
+      if(!seen.has(k)){seen.add(k);out.push(S)}})}
+  G.variants=out;return out;
+}
+// 내 판 진단: 빈칸, 범위 밖, 중복, 틀린 줄
+function godReport(){
+  const st=godState(),n=G.v.map(r=>r.map(x=>x===''?null:+x)),all=n.flat(),cnt={};all.forEach(x=>{if(x!=null)cnt[x]=(cnt[x]||0)+1});
+  const empty=all.filter(x=>x==null).length,dup=Object.keys(cnt).filter(k=>cnt[k]>1).map(Number),out=all.filter(x=>x!=null&&(x<1||x>49)),miss=[...Array(49)].map((_,i)=>i+1).filter(k=>!cnt[k]);
+  const lines=[];st.rows.forEach((v,i)=>{if(v!=null&&v!=175)lines.push(`${i+1}행 ${v}`)});st.cols.forEach((v,i)=>{if(v!=null&&v!=175)lines.push(`${i+1}열 ${v}`)});
+  if(st.d1!=null&&st.d1!=175)lines.push(`↘ 대각선 ${st.d1}`);if(st.d2!=null&&st.d2!=175)lines.push(`↙ 대각선 ${st.d2}`);
+  const msgs=[];
+  if(st.ok)msgs.push('<b class="ok">조건을 모두 만족하는 마방진이다. 통과!</b>');
+  else{if(empty)msgs.push(`빈칸 ${empty}개`);if(out.length)msgs.push(`1~49 밖의 수: ${out.join(', ')}`);if(dup.length)msgs.push(`두 번 이상 쓴 수: ${dup.join(', ')}`);
+    if(miss.length&&miss.length<=12)msgs.push(`아직 안 쓴 수: ${miss.join(', ')}`);if(lines.length)msgs.push(`합이 175가 아닌 줄: ${lines.join(' · ')}`);
+    if(!lines.length&&!dup.length&&!out.length&&empty)msgs.push('지금까지 다 채운 줄은 모두 175로 맞다.')}
+  return msgs;
+}
 function godNew(){const P=panMagic();G={game:'god',sol:P.S,one:P.one,two:P.two,step:P.step,v:[...Array(7)].map(()=>Array(7).fill('')),t0:Date.now(),limit:3600e3,hints:0,done:null};G.v[P.one[0]][P.one[1]]='1';godDraw();godLoop()}
 function godLoop(){if(G.game!='god'||G.done)return;const l=G.limit-(Date.now()-G.t0);const c=$('.clock');if(c)c.textContent=fmt(l);if(l<=0){G.done='fail';DR.record('god',{clear:false});return godDraw()}DR.after(godLoop,1000)}
 function godState(){const n=G.v.map(r=>r.map(x=>x===''?null:+x)),sum=a=>a.every(x=>x!=null)?a.reduce((s,x)=>s+x,0):null;
@@ -239,22 +266,26 @@ function godDraw(){
     '이 판은 위아래·좌우 끝이 서로 이어진 판으로 생각하면 풀린다. 연속된 수는 늘 같은 걸음으로 이어지고(판 밖으로 나가면 반대편에서 들어온다), 7의 배수 다음에만 걸음이 바뀐다.',
     `2는 ${G.two[0]+1}행 ${G.two[1]+1}열. 그다음 수들은 ${dir(G.step[0],G.step[1])}씩 이어진다.`];
   root.innerHTML=`<div class="grid2"><div class="card"><div class="row sp"><p class="k">신의 시험 · 7×7</p><b class="clock">${fmt(G.limit-(Date.now()-G.t0))}</b></div>
-  ${G.showAns?`<p class="ok" style="margin:6px 0">정답 예시 — 모든 줄의 합 175. 답은 여러 가지일 수 있다. 초록 칸은 이 답과 같게 넣은 수.</p><div class="magic">${G.sol.map((row,r)=>row.map((x,c)=>`<span class="mg ans ${String(x)===G.v[r][c]?'same':''}">${x}</span>`).join('')+'<span class="ms"><small class="ok">175</small></span>').join('')}${'<span class="ms"><small class="ok">175</small></span>'.repeat(7)}<span class="ms"><small class="ok">175</small></span></div>`:`
+  ${G.showAns?(()=>{const V=godVariants(),m=S=>S.flat().filter((x,i)=>String(x)===G.v[Math.floor(i/7)][i%7]).length,sorted=G.sorted||(G.sorted=V.slice().sort((a,b)=>m(b)-m(a)));G.ai=Math.min(G.ai||0,sorted.length-1);const A=sorted[G.ai];
+    return `<div class="row sp" style="margin:6px 0"><span class="ok"><b>정답 예시 ${G.ai+1} / ${sorted.length}</b> · 내 답과 같은 칸 ${m(A)}개</span><span class="row" style="gap:6px"><button id="ap" ${G.ai?'':'disabled'} aria-label="이전 예시" style="min-height:36px;padding:2px 12px">‹</button><button id="an" ${G.ai<sorted.length-1?'':'disabled'} aria-label="다음 예시" style="min-height:36px;padding:2px 12px">›</button></span></div>
+    <p class="mut" style="font-size:13px;margin:0 0 6px">이 1의 자리로 만들 수 있는 정답을 내 답과 가까운 순서로 보여 준다. 초록 칸은 이 예시와 같게 넣은 수. 여기 없는 배치라도 합 조건만 맞으면 정답이다.</p>
+    <div class="magic">${A.map((row,r)=>row.map((x,c)=>`<span class="mg ans ${String(x)===G.v[r][c]?'same':''}">${x}</span>`).join('')+'<span class="ms"><small class="ok">175</small></span>').join('')}${'<span class="ms"><small class="ok">175</small></span>'.repeat(7)}<span class="ms"><small class="ok">175</small></span></div>`})():`
   <div class="magic">${G.v.map((row,r)=>row.map((x,c)=>`<input class="mg ${s.bad[r*7+c]?'bad':''}" data-rc="${r},${c}" value="${x}" inputmode="numeric" maxlength="2" ${r==G.one[0]&&c==G.one[1]?'readonly':''} aria-label="${r+1}행 ${c+1}열">`).join('')+`<span class="ms">${tag(s.rows[r])}</span>`).join('')}
   ${s.cols.map(v=>`<span class="ms">${tag(v)}</span>`).join('')}<span class="ms">${tag(s.d1)}${s.d2!=null?' / '+s.d2:''}</span></div>`}
   <p class="mut" style="font-size:13px">오른쪽과 아래는 줄의 합, 오른쪽 아래 끝은 두 대각선의 합. 같은 수가 두 번 들어가면 붉게 표시된다.</p></div>
   <div class="stackg"><div class="card pop">${G.done=='ok'?`<h2>신의 시험 통과 — 메인 매치로 부활한다</h2><p>${fmt(G.doneT)} 만에 완성. 힌트 ${G.hints}개 사용.</p><button class="go" id="re">다시 도전</button>`
-    :G.done=='fail'?`<h2>실패 — 데블스 플랜을 완전히 떠난다</h2><div class="row"><button class="go" id="re">다시 도전</button><button id="ans">${G.showAns?'정답 숨기기':'정답 보기'}</button></div>`
+    :G.done=='fail'?`<h2>실패 — 데블스 플랜을 완전히 떠난다</h2><div class="rule"><b>내 판 진단</b><ul style="margin:6px 0 0">${godReport().map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="row"><button class="go" id="re">다시 도전</button><button id="ans">${G.showAns?'정답 숨기기':'정답 보기'}</button></div>`
     :`<p class="k">유배지 벽에 새겨진 문장</p><p>"<b>플레이어가 마방진에 놓을 수 있으면, 연속된 칸을 이어 갈 수 있다.</b>"</p>
     <p>1부터 49까지 모든 수를 한 번씩 넣어, 가로·세로·대각선의 합이 모두 같은 마방진을 1시간 안에 완성하라. 실패하면 완전히 탈락한다.</p>
     ${H.slice(0,G.hints).map((h,i)=>`<div class="rule">힌트 ${i+1}. ${h}</div>`).join('')}
-    <div class="row">${G.hints<H.length?`<button id="hn">힌트 보기 (${G.hints+1}/${H.length})</button>`:''}<button id="clr">모두 지우기</button><button id="gv">포기</button></div>`}</div></div></div>`;
-  root.querySelectorAll('.mg').forEach(inp=>inp.oninput=()=>{const [r,c]=inp.dataset.rc.split(',').map(Number);G.v[r][c]=inp.value.replace(/\D/g,'');
+    ${G.report?`<div class="rule" role="status"><b>정답 확인</b><ul style="margin:6px 0 0">${G.report.map(x=>`<li>${x}</li>`).join('')}</ul><small class="mut">1의 자리가 맞고 1~49를 한 번씩 써서 열여섯 줄이 모두 175면, 어떤 배치든 정답으로 인정한다.</small></div>`:''}
+    <div class="row"><button class="go" id="chk">정답 확인</button>${G.hints<H.length?`<button id="hn">힌트 보기 (${G.hints+1}/${H.length})</button>`:''}<button id="clr">모두 지우기</button><button id="gv">포기</button></div>`}</div></div></div>`;
+  root.querySelectorAll('.mg').forEach(inp=>inp.oninput=()=>{const [r,c]=inp.dataset.rc.split(',').map(Number);G.v[r][c]=inp.value.replace(/\D/g,'');G.report=null;
     const st=godState();if(st.ok&&!G.done){G.done='ok';G.doneT=Date.now()-G.t0;DR.record('god',{clear:true,score:G.doneT/1000,lowBetter:1,text:`${fmt(G.doneT)} · 힌트 ${G.hints}`});godDraw();return}
     // 합만 다시 그리기 (입력 포커스 유지)
     const tmp=document.createElement('div');const keep=document.activeElement&&document.activeElement.dataset.rc;godDraw();if(keep){const e=root.querySelector(`[data-rc="${keep}"]`);if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}});
   on('hn',()=>{G.hints++;godDraw()});on('clr',()=>{G.v=G.v.map((r,i)=>r.map((x,j)=>i==G.one[0]&&j==G.one[1]?'1':''));godDraw()});
-  on('gv',()=>{G.done='fail';DR.record('god',{clear:false});godDraw()});on('re',godNew);on('ans',()=>{G.showAns=!G.showAns;godDraw()});
+  on('gv',()=>{G.done='fail';DR.record('god',{clear:false});godDraw()});on('re',godNew);on('ans',()=>{G.showAns=!G.showAns;G.sorted=null;G.ai=0;godDraw()});on('ap',()=>{G.ai--;godDraw()});on('an',()=>{G.ai++;godDraw()});on('chk',()=>{G.report=godReport();godDraw()});
 }
 
 /* =================== 소개 화면 =================== */
@@ -275,5 +306,6 @@ DR.games.god={title:'신의 시험',start(r){root=r;G={};intro('god')}};
 DR.exileTest={isSym,fenceValid,connectedC,
   fenceAnswer(){const {n,reg}=G,g=(x,y)=>x<0||y<0||x>=n||y>=n?0:reg[x][y];for(let r=0;r<=n;r++)for(let c=0;c<n;c++)G.h[r][c]=g(r-1,c)!=g(r,c)?1:0;for(let r=0;r<n;r++)for(let c=0;c<=n;c++)G.v[r][c]=g(r,c-1)!=g(r,c)?1:0;return fenceSolved()},
   symAnswerExists(){return G.pieces&&G.pieces.length==3&&G.pieces.every(p=>p.cells.length>=3)},
+  godVariantsCheck(){const V=godVariants();let bad=0;V.forEach(S=>{G.v=S.map(r=>r.map(String));if(!godState().ok||S[G.one[0]][G.one[1]]!=1)bad++});return {n:V.length,bad}},
   godCheck(){G.v=G.sol.map(row=>row.map(String));return godState().ok&&G.sol[G.one[0]][G.one[1]]==1}};
 }
