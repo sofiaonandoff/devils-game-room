@@ -211,8 +211,19 @@ function bindDrag(){
 }
 
 /* =================== 신의 시험 =================== */
-function siamese(){const n=7,m=[...Array(n)].map(()=>Array(n).fill(0));let r=0,c=3;for(let k=1;k<=49;k++){m[r][c]=k;const nr=(r-1+n)%n,nc=(c+1)%n;if(m[nr][nc])r=(r+1)%n;else{r=nr;c=nc}}return m}
-function godNew(){G={game:'god',v:[...Array(7)].map(()=>Array(7).fill('')),t0:Date.now(),limit:3600e3,hints:0,done:null};G.v[0][3]='1';godDraw();godLoop()}
+// 범대각 마방진: M[i][j] = 7·((a·i+b·j) mod 7) + ((c·i+d·j) mod 7) + 1. 위아래·좌우를 이어 붙여도 마방진이라, 1을 어느 칸으로든 옮길 수 있다.
+function panMagic(){
+  const n=7,g=(x,y)=>{x=Math.abs(x);while(y){[x,y]=[y,x%y]}return x},ok=x=>x%n!=0&&g(((x%n)+n)%n,n)==1,opts=[];
+  for(let a=1;a<n;a++)for(let b=1;b<n;b++)for(let c=1;c<n;c++)for(let d=1;d<n;d++)
+    if([a,b,a+b,a-b,c,d,c+d,c-d,a*d-b*c].every(ok))opts.push([a,b,c,d]);
+  const [a,b,c,d]=opts[rnd(opts.length)],M=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>n*((a*i+b*j)%n)+((c*i+d*j)%n)+1));
+  let i0,j0;M.forEach((row,i)=>row.forEach((v,j)=>{if(v==1){i0=i;j0=j}}));
+  const r0=rnd(n),c0=rnd(n),S=[...Array(n)].map((_,i)=>[...Array(n)].map((_,j)=>M[(i-r0+i0+n*2)%n][(j-c0+j0+n*2)%n]));
+  // 2에서 3으로 가는 걸음 (힌트용)
+  let p2,p3;S.forEach((row,i)=>row.forEach((v,j)=>{if(v==2)p2=[i,j];if(v==3)p3=[i,j]}));
+  return {S,one:[r0,c0],two:p2,step:[(p3[0]-p2[0]+n)%n,(p3[1]-p2[1]+n)%n]};
+}
+function godNew(){const P=panMagic();G={game:'god',sol:P.S,one:P.one,two:P.two,step:P.step,v:[...Array(7)].map(()=>Array(7).fill('')),t0:Date.now(),limit:3600e3,hints:0,done:null};G.v[P.one[0]][P.one[1]]='1';godDraw();godLoop()}
 function godLoop(){if(G.game!='god'||G.done)return;const l=G.limit-(Date.now()-G.t0);const c=$('.clock');if(c)c.textContent=fmt(l);if(l<=0){G.done='fail';DR.record('god',{clear:false});return godDraw()}DR.after(godLoop,1000)}
 function godState(){const n=G.v.map(r=>r.map(x=>x===''?null:+x)),sum=a=>a.every(x=>x!=null)?a.reduce((s,x)=>s+x,0):null;
   const rows=n.map(r=>sum(r)),cols=[...Array(7)].map((_,c)=>sum(n.map(r=>r[c]))),d1=sum(n.map((r,i)=>r[i])),d2=sum(n.map((r,i)=>r[6-i]));
@@ -223,10 +234,13 @@ function godState(){const n=G.v.map(r=>r.map(x=>x===''?null:+x)),sum=a=>a.every(
 function godDraw(){
   const s=godState();DR.status(`채운 칸 ${s.filled} / 49`);
   const tag=v=>v==null?'':`<small class="${v==175?'ok':'warn'}">${v}</small>`;
-  const H=['가로·세로·두 대각선, 열여섯 줄의 합이 모두 같다. 1부터 49까지 더하면 1225, 일곱 줄로 나누면 한 줄은 175.','1은 맨 윗줄 가운데에 고정돼 있다. 다음 수는 오른쪽 위 대각선 칸으로 이어 간다. 판 밖으로 나가면 반대편으로 돌아오고, 그 칸이 이미 차 있으면 바로 아래 칸으로 간다.'];
+  const dir=(di,dj)=>{const v=di==0?'':di<=3?`아래로 ${di}칸`:`위로 ${7-di}칸`,h=dj==0?'':dj<=3?`오른쪽으로 ${dj}칸`:`왼쪽으로 ${7-dj}칸`;return [v,h].filter(Boolean).join(', ')};
+  const H=['가로·세로·두 대각선, 열여섯 줄의 합이 모두 같다. 1부터 49까지 더하면 1225, 일곱 줄로 나누면 한 줄은 175.',
+    '이 판은 위아래·좌우 끝이 서로 이어진 판으로 생각하면 풀린다. 연속된 수는 늘 같은 걸음으로 이어지고(판 밖으로 나가면 반대편에서 들어온다), 7의 배수 다음에만 걸음이 바뀐다.',
+    `2는 ${G.two[0]+1}행 ${G.two[1]+1}열. 그다음 수들은 ${dir(G.step[0],G.step[1])}씩 이어진다.`];
   root.innerHTML=`<div class="grid2"><div class="card"><div class="row sp"><p class="k">신의 시험 · 7×7</p><b class="clock">${fmt(G.limit-(Date.now()-G.t0))}</b></div>
-  ${G.showAns?`<p class="ok" style="margin:6px 0">정답 — 모든 줄의 합 175. 초록 칸은 내가 맞게 넣은 수.</p><div class="magic">${siamese().map((row,r)=>row.map((x,c)=>`<span class="mg ans ${String(x)===G.v[r][c]?'same':''}">${x}</span>`).join('')+'<span class="ms"><small class="ok">175</small></span>').join('')}${'<span class="ms"><small class="ok">175</small></span>'.repeat(7)}<span class="ms"><small class="ok">175</small></span></div>`:`
-  <div class="magic">${G.v.map((row,r)=>row.map((x,c)=>`<input class="mg ${s.bad[r*7+c]?'bad':''}" data-rc="${r},${c}" value="${x}" inputmode="numeric" maxlength="2" ${r==0&&c==3?'readonly':''} aria-label="${r+1}행 ${c+1}열">`).join('')+`<span class="ms">${tag(s.rows[r])}</span>`).join('')}
+  ${G.showAns?`<p class="ok" style="margin:6px 0">정답 예시 — 모든 줄의 합 175. 답은 여러 가지일 수 있다. 초록 칸은 이 답과 같게 넣은 수.</p><div class="magic">${G.sol.map((row,r)=>row.map((x,c)=>`<span class="mg ans ${String(x)===G.v[r][c]?'same':''}">${x}</span>`).join('')+'<span class="ms"><small class="ok">175</small></span>').join('')}${'<span class="ms"><small class="ok">175</small></span>'.repeat(7)}<span class="ms"><small class="ok">175</small></span></div>`:`
+  <div class="magic">${G.v.map((row,r)=>row.map((x,c)=>`<input class="mg ${s.bad[r*7+c]?'bad':''}" data-rc="${r},${c}" value="${x}" inputmode="numeric" maxlength="2" ${r==G.one[0]&&c==G.one[1]?'readonly':''} aria-label="${r+1}행 ${c+1}열">`).join('')+`<span class="ms">${tag(s.rows[r])}</span>`).join('')}
   ${s.cols.map(v=>`<span class="ms">${tag(v)}</span>`).join('')}<span class="ms">${tag(s.d1)}${s.d2!=null?' / '+s.d2:''}</span></div>`}
   <p class="mut" style="font-size:13px">오른쪽과 아래는 줄의 합, 오른쪽 아래 끝은 두 대각선의 합. 같은 수가 두 번 들어가면 붉게 표시된다.</p></div>
   <div class="stackg"><div class="card pop">${G.done=='ok'?`<h2>신의 시험 통과 — 메인 매치로 부활한다</h2><p>${fmt(G.doneT)} 만에 완성. 힌트 ${G.hints}개 사용.</p><button class="go" id="re">다시 도전</button>`
@@ -239,7 +253,7 @@ function godDraw(){
     const st=godState();if(st.ok&&!G.done){G.done='ok';G.doneT=Date.now()-G.t0;DR.record('god',{clear:true,score:G.doneT/1000,lowBetter:1,text:`${fmt(G.doneT)} · 힌트 ${G.hints}`});godDraw();return}
     // 합만 다시 그리기 (입력 포커스 유지)
     const tmp=document.createElement('div');const keep=document.activeElement&&document.activeElement.dataset.rc;godDraw();if(keep){const e=root.querySelector(`[data-rc="${keep}"]`);if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}});
-  on('hn',()=>{G.hints++;godDraw()});on('clr',()=>{G.v=G.v.map((r,i)=>r.map((x,j)=>i==0&&j==3?'1':''));godDraw()});
+  on('hn',()=>{G.hints++;godDraw()});on('clr',()=>{G.v=G.v.map((r,i)=>r.map((x,j)=>i==G.one[0]&&j==G.one[1]?'1':''));godDraw()});
   on('gv',()=>{G.done='fail';DR.record('god',{clear:false});godDraw()});on('re',godNew);on('ans',()=>{G.showAns=!G.showAns;godDraw()});
 }
 
@@ -248,7 +262,7 @@ const INTRO={
  diff:['2일차 유배지 매치','다른 곳 일곱 군데를 찾아라','<li>두 그림이 나란히 나온다. 색, 크기, 위치, 각도가 바뀌거나 사라진 곳이 <b>일곱 군데</b> 있다.</li><li>틀린 곳을 누르면 3초 동안 누를 수 없다.</li><li>네 명 가운데 <b>가장 늦게 끝낸 1명</b>이 유배지에서도 탈락한다.</li>','그림은 매번 새로 그린다. 방송의 그림과 세부 진행은 공개 자료에서 확인하지 못해, 일반적인 틀린 그림 찾기 규칙으로 만들었다.',diffNew],
  fence:['3일차 유배지 매치','점을 이어 하나의 울타리를','<li>점과 점 사이에 선을 그어 <b>하나의 닫힌 고리</b>를 만든다. 갈라지거나 교차하면 안 된다.</li><li>칸의 숫자는 그 칸의 네 변 가운데 선이 지나가는 변의 개수.</li><li>네 명 가운데 <b>가장 늦게 완성한 1명</b>이 탈락.</li>','방송에서는 슬리더링크 규칙으로 약 10×10 판을 썼다. 여기서는 5×5, 7×7, 10×10 가운데 고를 수 있고, 숫자 몇 개는 가려 둔다. 숫자를 만족하는 고리라면 어느 것이든 정답이다.',()=>fenceNew(7)],
  sym:['4일차 유배지 매치','세 조각으로 대칭 도형을','<li>조각 <b>세 개</b>를 옮기고 돌려서(뒤집기 불가) 하나의 <b>선대칭 도형</b>을 만든다.</li><li>세 조각을 모두 써야 하고, 조각끼리 이어져 있어야 한다.</li><li>네 명 가운데 <b>가장 늦게 완성한 1명</b>이 탈락.</li>','방송은 자유로운 다각형 조각이었다. 여기서는 칸 위의 조각으로 바꿨고, 가로·세로·대각선 어느 축의 대칭이든 정답으로 친다.',symNew],
- god:['유배지 · 부활의 길','1은 이미 놓여 있다','<li>유배지의 암호를 풀면 열리는 길. 메인 매치 전에 도전할 수 있고, 주어진 시간은 <b>1시간</b>.</li><li>통과하면 <b>메인 매치로 복귀</b>, 실패하면 <b>완전히 탈락</b>한다.</li><li>7×7 판에 1부터 49까지 넣어 가로·세로·대각선의 합이 모두 같게 만든다. 1의 자리는 고정.</li>','방송에서 상세 규칙은 공개되지 않았다. 출연자의 말로 1의 위치가 고정된 7×7 마방진으로 추정되는 것을 그대로 만들었다.',godNew]
+ god:['유배지 · 부활의 길','1은 이미 놓여 있다','<li>유배지의 암호를 풀면 열리는 길. 메인 매치 전에 도전할 수 있고, 주어진 시간은 <b>1시간</b>.</li><li>통과하면 <b>메인 매치로 복귀</b>, 실패하면 <b>완전히 탈락</b>한다.</li><li>7×7 판에 1부터 49까지 넣어 가로·세로·대각선의 합이 모두 같게 만든다. 1은 미리 놓여 있고, 문제마다 1의 자리가 바뀐다.</li>','방송에서 상세 규칙은 공개되지 않았다. 출연자의 말로 1의 위치가 고정된 7×7 마방진으로 추정되는 것을 그대로 만들었다.',godNew]
 };
 function intro(k){
   const [tp,h,rules,note,go]=INTRO[k];DR.status('준비');
@@ -261,5 +275,5 @@ DR.games.god={title:'신의 시험',start(r){root=r;G={};intro('god')}};
 DR.exileTest={isSym,fenceValid,connectedC,
   fenceAnswer(){const {n,reg}=G,g=(x,y)=>x<0||y<0||x>=n||y>=n?0:reg[x][y];for(let r=0;r<=n;r++)for(let c=0;c<n;c++)G.h[r][c]=g(r-1,c)!=g(r,c)?1:0;for(let r=0;r<n;r++)for(let c=0;c<=n;c++)G.v[r][c]=g(r,c-1)!=g(r,c)?1:0;return fenceSolved()},
   symAnswerExists(){return G.pieces&&G.pieces.length==3&&G.pieces.every(p=>p.cells.length>=3)},
-  godCheck(){const n=7,m=[...Array(n)].map(()=>Array(n).fill(0));let r=0,c=3;for(let k=1;k<=49;k++){m[r][c]=k;const nr=(r-1+n)%n,nc=(c+1)%n;if(m[nr][nc]){r=(r+1)%n}else{r=nr;c=nc}}G.v=m.map(row=>row.map(String));return godState().ok&&m[0][3]==1}};
+  godCheck(){G.v=G.sol.map(row=>row.map(String));return godState().ok&&G.sol[G.one[0]][G.one[1]]==1}};
 }
