@@ -107,16 +107,20 @@ function fenceDraw(){
   const edge=(x1,y1,x2,y2,st,k)=>`<g class="fe" data-e="${k}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="16"/>${st==1?`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--blood)" stroke-width="5" stroke-linecap="round"/>`:st==2?`<text x="${(x1+x2)/2}" y="${(y1+y2)/2}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="var(--mut)">×</text>`:`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/>`}</g>`;
   for(let r=0;r<=n;r++)for(let c=0;c<n;c++)s+=edge(P+c*S,P+r*S,P+(c+1)*S,P+r*S,G.h[r][c],`h${r},${c}`);
   for(let r=0;r<n;r++)for(let c=0;c<=n;c++)s+=edge(P+c*S,P+r*S,P+c*S,P+(r+1)*S,G.v[r][c],`v${r},${c}`);
+  if(G.showAns){const g=(x,y)=>x<0||y<0||x>=n||y>=n?0:G.reg[x][y],ln=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#e8c262" stroke-width="9" stroke-linecap="round" opacity=".55"/>`;
+    for(let r=0;r<=n;r++)for(let c=0;c<n;c++)if(g(r-1,c)!=g(r,c))s+=ln(P+c*S,P+r*S,P+(c+1)*S,P+r*S);
+    for(let r=0;r<n;r++)for(let c=0;c<=n;c++)if(g(r,c-1)!=g(r,c))s+=ln(P+c*S,P+r*S,P+c*S,P+(r+1)*S);
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(!G.show[r][c])s+=`<text x="${P+c*S+S/2}" y="${P+r*S+S/2}" text-anchor="middle" dominant-baseline="central" font-family="Black Han Sans" font-size="20" fill="var(--gold)">${G.clue[r][c]}</text>`}
   for(let r=0;r<=n;r++)for(let c=0;c<=n;c++)s+=`<circle cx="${P+c*S}" cy="${P+r*S}" r="3" fill="currentColor"/>`;
   s+='</svg>';
   root.innerHTML=`<div class="grid2"><div class="card"><div class="row sp"><p class="k">3일차 유배지 매치 · 울타리 치기</p><div class="row" style="gap:6px">${[5,7,10].map(k=>`<button data-n="${k}" class="${k==n?'sel':''}" style="min-height:36px;padding:4px 10px">${k}×${k}</button>`).join('')}</div></div>${s}
   <p class="mut" style="font-size:13px">점 사이를 누르면 선 → × → 지움. 숫자는 그 칸 네 변 가운데 선의 개수. 모든 선이 갈라지거나 겹치지 않는 하나의 고리가 되면 완성.</p><p class="warn">${G.msg||''}</p></div>
-  <div class="stackg"><div class="card" id="rb">${raceBox(G.R)}</div><div class="card">${G.res?raceEnd(G.R,G.res):`<button class="go" id="ck">완성 확인</button> <button id="cl">모두 지우기</button>`}</div></div></div>`;
+  <div class="stackg"><div class="card" id="rb">${raceBox(G.R)}</div><div class="card">${G.res?raceEnd(G.R,G.res)+(G.res.out?` <button id="ans" ${G.showAns?'aria-pressed="true"':''}>${G.showAns?'정답 숨기기':'정답 보기'}</button>${G.showAns?'<p class="mut" style="font-size:13px;margin:8px 0 0">금색 굵은 선이 정답 울타리, 금색 숫자는 가려져 있던 칸이다. 붉은 선은 내가 그은 선.</p>':''}`:''):`<button class="go" id="ck">완성 확인</button> <button id="cl">모두 지우기</button>`}</div></div></div>`;
   root.querySelectorAll('.fe').forEach(g=>g.onclick=()=>{if(G.res)return;const k=g.dataset.e,[r,c]=k.slice(1).split(',').map(Number),A=k[0]=='h'?G.h:G.v;A[r][c]=(A[r][c]+1)%3;G.msg='';
     if(fenceSolved()){G.R.me=Date.now()-G.R.t0;raceCheck(G.R,res=>G.res=res)}fenceDraw()});
   root.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>fenceNew(+b.dataset.n));
   on('ck',()=>{G.msg=fenceSolved()?'':'아직 아니다 — 숫자가 맞지 않거나 고리가 하나로 닫히지 않았다.';fenceDraw()});
-  on('cl',()=>{G.h.forEach(r=>r.fill(0));G.v.forEach(r=>r.fill(0));fenceDraw()});on('re',()=>fenceNew(G.n));
+  on('cl',()=>{G.h.forEach(r=>r.fill(0));G.v.forEach(r=>r.fill(0));fenceDraw()});on('ans',()=>{G.showAns=!G.showAns;fenceDraw()});on('re',()=>fenceNew(G.n));
 }
 
 /* =================== 대칭 퍼즐 (4일차) =================== */
