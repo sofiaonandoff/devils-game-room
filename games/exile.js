@@ -211,6 +211,7 @@ function bindDrag(){
 }
 
 /* =================== 신의 시험 =================== */
+function siamese(){const n=7,m=[...Array(n)].map(()=>Array(n).fill(0));let r=0,c=3;for(let k=1;k<=49;k++){m[r][c]=k;const nr=(r-1+n)%n,nc=(c+1)%n;if(m[nr][nc])r=(r+1)%n;else{r=nr;c=nc}}return m}
 function godNew(){G={game:'god',v:[...Array(7)].map(()=>Array(7).fill('')),t0:Date.now(),limit:3600e3,hints:0,done:null};G.v[0][3]='1';godDraw();godLoop()}
 function godLoop(){if(G.game!='god'||G.done)return;const l=G.limit-(Date.now()-G.t0);const c=$('.clock');if(c)c.textContent=fmt(l);if(l<=0){G.done='fail';DR.record('god',{clear:false});return godDraw()}DR.after(godLoop,1000)}
 function godState(){const n=G.v.map(r=>r.map(x=>x===''?null:+x)),sum=a=>a.every(x=>x!=null)?a.reduce((s,x)=>s+x,0):null;
@@ -224,11 +225,12 @@ function godDraw(){
   const tag=v=>v==null?'':`<small class="${v==175?'ok':'warn'}">${v}</small>`;
   const H=['가로·세로·두 대각선, 열여섯 줄의 합이 모두 같다. 1부터 49까지 더하면 1225, 일곱 줄로 나누면 한 줄은 175.','1은 맨 윗줄 가운데에 고정돼 있다. 다음 수는 오른쪽 위 대각선 칸으로 이어 간다. 판 밖으로 나가면 반대편으로 돌아오고, 그 칸이 이미 차 있으면 바로 아래 칸으로 간다.'];
   root.innerHTML=`<div class="grid2"><div class="card"><div class="row sp"><p class="k">신의 시험 · 7×7</p><b class="clock">${fmt(G.limit-(Date.now()-G.t0))}</b></div>
+  ${G.showAns?`<p class="ok" style="margin:6px 0">정답 — 모든 줄의 합 175. 초록 칸은 내가 맞게 넣은 수.</p><div class="magic">${siamese().map((row,r)=>row.map((x,c)=>`<span class="mg ans ${String(x)===G.v[r][c]?'same':''}">${x}</span>`).join('')+'<span class="ms"><small class="ok">175</small></span>').join('')}${'<span class="ms"><small class="ok">175</small></span>'.repeat(7)}<span class="ms"><small class="ok">175</small></span></div>`:`
   <div class="magic">${G.v.map((row,r)=>row.map((x,c)=>`<input class="mg ${s.bad[r*7+c]?'bad':''}" data-rc="${r},${c}" value="${x}" inputmode="numeric" maxlength="2" ${r==0&&c==3?'readonly':''} aria-label="${r+1}행 ${c+1}열">`).join('')+`<span class="ms">${tag(s.rows[r])}</span>`).join('')}
-  ${s.cols.map(v=>`<span class="ms">${tag(v)}</span>`).join('')}<span class="ms">${tag(s.d1)}${s.d2!=null?' / '+s.d2:''}</span></div>
+  ${s.cols.map(v=>`<span class="ms">${tag(v)}</span>`).join('')}<span class="ms">${tag(s.d1)}${s.d2!=null?' / '+s.d2:''}</span></div>`}
   <p class="mut" style="font-size:13px">오른쪽과 아래는 줄의 합, 오른쪽 아래 끝은 두 대각선의 합. 같은 수가 두 번 들어가면 붉게 표시된다.</p></div>
   <div class="stackg"><div class="card pop">${G.done=='ok'?`<h2>신의 시험 통과 — 메인 매치로 부활한다</h2><p>${fmt(G.doneT)} 만에 완성. 힌트 ${G.hints}개 사용.</p><button class="go" id="re">다시 도전</button>`
-    :G.done=='fail'?`<h2>실패 — 데블스 플랜을 완전히 떠난다</h2><button class="go" id="re">다시 도전</button>`
+    :G.done=='fail'?`<h2>실패 — 데블스 플랜을 완전히 떠난다</h2><div class="row"><button class="go" id="re">다시 도전</button><button id="ans">${G.showAns?'정답 숨기기':'정답 보기'}</button></div>`
     :`<p class="k">유배지 벽에 새겨진 문장</p><p>"<b>플레이어가 마방진에 놓을 수 있으면, 연속된 칸을 이어 갈 수 있다.</b>"</p>
     <p>1부터 49까지 모든 수를 한 번씩 넣어, 가로·세로·대각선의 합이 모두 같은 마방진을 1시간 안에 완성하라. 실패하면 완전히 탈락한다.</p>
     ${H.slice(0,G.hints).map((h,i)=>`<div class="rule">힌트 ${i+1}. ${h}</div>`).join('')}
@@ -238,7 +240,7 @@ function godDraw(){
     // 합만 다시 그리기 (입력 포커스 유지)
     const tmp=document.createElement('div');const keep=document.activeElement&&document.activeElement.dataset.rc;godDraw();if(keep){const e=root.querySelector(`[data-rc="${keep}"]`);if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}});
   on('hn',()=>{G.hints++;godDraw()});on('clr',()=>{G.v=G.v.map((r,i)=>r.map((x,j)=>i==0&&j==3?'1':''));godDraw()});
-  on('gv',()=>{G.done='fail';DR.record('god',{clear:false});godDraw()});on('re',godNew);
+  on('gv',()=>{G.done='fail';DR.record('god',{clear:false});godDraw()});on('re',godNew);on('ans',()=>{G.showAns=!G.showAns;godDraw()});
 }
 
 /* =================== 소개 화면 =================== */
