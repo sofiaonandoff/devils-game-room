@@ -254,7 +254,18 @@ button.slot{cursor:pointer}button.slot.sel{outline:3px solid var(--gold)}
 .gslot,.gseat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:10px;border:1px solid transparent;background:none;font-size:13px;min-height:0}
 button.gslot,button.gseat{cursor:pointer;border-color:var(--line)}button.gslot:hover,button.gseat:hover{border-color:var(--gold)}
 .gseats{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
-.gseat small{color:var(--mut);font-size:11px}.gseat.cur{background:color-mix(in srgb,var(--blood) 14%,transparent)}.gseat.me span{color:var(--gold);font-weight:700}
+.gseat small{color:var(--mut);font-size:11px}
+.gm.mem{opacity:.55;filter:saturate(.6);outline:1px dashed var(--gold);outline-offset:2px}.gm.mine.mem{outline-style:dashed}
+.gslot.hl,.gseat.hl{background:color-mix(in srgb,var(--gold) 22%,transparent);border-color:var(--gold);animation:ghl 1s ease}
+@keyframes ghl{0%{transform:scale(1.12)}100%{transform:none}}
+.gpv{font:400 15px 'Black Han Sans';font-style:normal;color:var(--mut);line-height:1}.gpv.pos{color:#5fc98a}.gpv.neg{color:var(--blood)}
+.gres{width:100%;font-size:13px}.gres td{padding:3px 4px}.gres td.mut{font-size:12px}
+.gclue{padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--gold) 14%,transparent);font-size:14px}
+.gguess{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.gguess button{display:flex;flex-direction:column;gap:2px;padding:8px}.gguess small{color:var(--mut);font-size:11px}
+.ann.fade{animation:annfade 3.6s forwards}@keyframes annfade{0%,80%{opacity:1}100%{opacity:0;visibility:hidden}}
+.phist{font-size:13px;margin:-4px 0 8px}
+.pmemo{display:flex;flex-direction:column;gap:6px}.pmr{display:flex;align-items:center;gap:6px;font-size:14px}.pmr b{width:40px}.pmr i{font-style:normal;font:400 20px 'Black Han Sans';min-width:24px;text-align:center}.pmr button{min-height:30px;width:30px;padding:0}
+.gseat.cur{background:color-mix(in srgb,var(--blood) 14%,transparent)}.gseat.me span{color:var(--gold);font-weight:700}
 /* ---------- 벽바둑Ⅱ ---------- */
 .wboard{--wall:var(--blood);display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:min(100%,460px);aspect-ratio:1;margin:10px auto;border:4px solid var(--ink);border-radius:6px}
 .wc{border:4px solid var(--line);display:grid;place-items:center;background:var(--bg);padding:0;min-height:0;border-radius:0}
