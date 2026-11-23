@@ -145,8 +145,10 @@ function symNew(){
     if(pieces.some(p=>p.length<3||!connectedC(p)))continue;
     if(pieces.some(p=>isSym(p)))continue;
     break}
+  // 정답: 원래 대칭 도형 안의 자리 (판 가운데로 옮겨 둔다)
+  const sol={};pieces.forEach((p,i)=>p.forEach(([x,y])=>sol[(x+1)+','+(y+2)]=i));
   pieces=pieces.map((p,i)=>{let c=normC(p);for(let k=rnd(4);k>0;k--)c=rotC(c);return {id:i,cells:c,at:null}});
-  G={game:'sym',B:10,pieces,sel:0,R:race('sym',90,260,600),msg:''};symDraw();symLoop();
+  G={game:'sym',B:10,sol,pieces,sel:0,R:race('sym',90,260,600),msg:''};symDraw();symLoop();
 }
 function symLoop(){if(G.game!='sym'||G.R.done)return;if(raceCheck(G.R,res=>{G.res=res;symDraw()}))return;const b=$('#rb');if(b)b.innerHTML=raceBox(G.R);DR.after(symLoop,500)}
 const placed=()=>G.pieces.filter(p=>p.at).flatMap(p=>p.cells.map(([x,y])=>[x+p.at[0],y+p.at[1]]));
@@ -157,18 +159,19 @@ function fits(p,at){const occ=new Set(G.pieces.filter(q=>q!==p&&q.at).flatMap(q=
 function afterMove(){const nx=G.pieces.find(q=>!q.at);
   if(symCheck()){G.R.me=Date.now()-G.R.t0;raceCheck(G.R,res=>G.res=res);G.msg=''}else G.msg=nx?'':'세 조각을 모두 놓았지만 아직 선대칭이 아니다.';symDraw()}
 function symDraw(){
-  DR.status('대칭 퍼즐');const occ={};G.pieces.forEach(p=>{if(p.at)p.cells.forEach(([x,y])=>occ[(x+p.at[0])+','+(y+p.at[1])]=p.id)});
+  DR.status('대칭 퍼즐');let occ={};G.pieces.forEach(p=>{if(p.at)p.cells.forEach(([x,y])=>occ[(x+p.at[0])+','+(y+p.at[1])]=p.id)});
+  if(G.showAns)occ=G.sol;
   const pieceMini=p=>{const w=Math.max(...p.cells.map(c=>c[0]))+1,h=Math.max(...p.cells.map(c=>c[1]))+1,S=new Set(p.cells.map(c=>c.join()));
     return `<div class="tl" style="--ts:22px;grid-template-columns:repeat(${w},var(--ts))">${[...Array(h)].map((_,y)=>[...Array(w)].map((_,x)=>S.has(x+','+y)?`<span class="t" data-g="${x},${y}" style="background:${PCOL[p.id]}"></span>`:'<span></span>').join('')).join('')}</div>`};
   root.innerHTML=`<div class="grid2"><div class="card"><p class="k">4일차 유배지 매치 · 대칭 퍼즐</p>
-  <div class="symb" id="sb" style="grid-template-columns:repeat(${G.B},1fr)">${[...Array(G.B)].map((_,y)=>[...Array(G.B)].map((_,x)=>{const o=occ[x+','+y];return `<div class="sc2 ${o!=null&&G.sel===o?'selp':''}" data-xy="${x},${y}" ${o!=null?`data-op="${o}" style="background:${PCOL[o]}"`:''}></div>`}).join('')).join('')}</div>
+  ${G.showAns?'<p class="ok" style="margin:6px 0">정답 배치 — 세로축 대칭. 버튼을 다시 누르면 내 배치로 돌아간다.</p>':''}<div class="symb ${G.showAns?'ans':''}" id="sb" style="grid-template-columns:repeat(${G.B},1fr)">${[...Array(G.B)].map((_,y)=>[...Array(G.B)].map((_,x)=>{const o=occ[x+','+y];return `<div class="sc2 ${o!=null&&G.sel===o?'selp':''}" data-xy="${x},${y}" ${o!=null?`data-op="${o}" style="background:${PCOL[o]}"`:''}></div>`}).join('')).join('')}</div>
   <p class="mut" style="font-size:13px">조각을 <b>끌어서</b> 판에 놓아 보세요. 놓인 조각도 끌어서 옮기고, 판 밖으로 끌면 되돌아간다. 조각을 누르면 고르고, 돌리기 버튼(또는 R 키)으로 돌린다. 세 조각으로 <b>선대칭</b> 도형(가로·세로·대각선 축 어느 것이든)을 만들면 완성.</p><p class="warn">${G.msg}</p></div>
   <div class="stackg"><div class="card"><p class="k">조각 (뒤집기 불가)</p><div class="row" style="align-items:flex-start;gap:14px">${G.pieces.map(p=>`<div class="spc ${G.sel===p.id?'sel':''} ${p.at?'used':''}" data-p="${p.id}" tabindex="0" role="button" aria-label="조각 ${p.id+1}">${pieceMini(p)}<small>${p.at?'판 위':'끌어서 놓기'}</small></div>`).join('')}</div>
   <div class="row" style="margin-top:10px"><button id="rt">고른 조각 돌리기 ↻</button><button id="rs">모두 거두기</button></div></div>
-  <div class="card" id="rb">${raceBox(G.R)}</div>${G.res?`<div class="card">${raceEnd(G.R,G.res)}</div>`:''}</div></div>`;
+  <div class="card" id="rb">${raceBox(G.R)}</div>${G.res?`<div class="card">${raceEnd(G.R,G.res)}${G.res.out?` <button id="ans">${G.showAns?'정답 숨기기':'정답 보기'}</button>`:''}</div>`:''}</div></div>`;
   bindDrag();
   on('rt',rotateSel);
-  on('rs',()=>{G.pieces.forEach(p=>p.at=null);G.msg='';symDraw()});on('re',symNew);
+  on('rs',()=>{G.pieces.forEach(p=>p.at=null);G.msg='';symDraw()});on('re',symNew);on('ans',()=>{G.showAns=!G.showAns;symDraw()});
   root.onkeydown=e=>{if((e.key=='r'||e.key=='R')&&G.game=='sym'){rotateSel();e.preventDefault()}};
 }
 function rotateSel(){if(G.res)return;const p=G.pieces[G.sel];if(!p)return;const old=p.cells;p.cells=rotC(p.cells);
@@ -204,7 +207,7 @@ function bindDrag(){
   root.querySelectorAll('[data-p]').forEach(el=>{el.onpointerdown=e=>{const p=G.pieces[+el.dataset.p];const g=e.target.closest('[data-g]');
       const grab=g?g.dataset.g.split(',').map(Number):p.cells[0];if(p.at){p.at=null}start(e,p,grab)};
     el.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){G.sel=+el.dataset.p;symDraw()}}});
-  sb.querySelectorAll('[data-op]').forEach(el=>el.onpointerdown=e=>{const p=G.pieces[+el.dataset.op],[x,y]=el.dataset.xy.split(',').map(Number);start(e,p,[x-p.at[0],y-p.at[1]])});
+  sb.querySelectorAll('[data-op]').forEach(el=>el.onpointerdown=e=>{if(G.res)return;const p=G.pieces[+el.dataset.op],[x,y]=el.dataset.xy.split(',').map(Number);start(e,p,[x-p.at[0],y-p.at[1]])});
 }
 
 /* =================== 신의 시험 =================== */
